@@ -1,0 +1,111 @@
+Operator & Campus,Location & Coordinates,Status,Total Capacity (MW),Cooling & Important Metrics,Official Documentation
+Scala Data Centers - AI City,"Eldorado do Sul, RS (-30.00, -51.31)",Planned,4750,PUE: ~1.2 | WUE: 0.0 | Closed-loop air and liquid cooling ready,https://www.interglobixmagazine.com/a-new-ai-city-is-coming-to-the-south-of-brazil/
+Scala Data Centers - Tamboré Campus (SP1-SP10),"Barueri, SP (-23.49, -46.84)",Partially Commissioned & Construction,600,"PUE: ~1.2 | WUE: 0.0 | Closed-loop, 100% renewable energy",https://www.interglobixmagazine.com/a-new-ai-city-is-coming-to-the-south-of-brazil/
+CloudHQ - GRU Campus,"Paulínia, SP (-22.76, -47.15)",Under Construction,288,Structure: 6 buildings at 48 MW each | Direct high-voltage interconnection,https://cloudhq.com/campus/gru-campus/
+Ascenty (Digital Realty) - Vinhedo Mega Campus,"Vinhedo, SP (-23.029, -46.975)",Commissioned,61,Structure: Vinhedo 1 & 2 | Power: 100% renewable via grid PPAs,https://dcatlas.io/en/explore/facilities/ascenty-vinhedo-1-data-center-vinhedo
+Ascenty (Digital Realty) - Jundiaí Campus (JDI01),"Jundiaí, SP (-23.191, -46.974)",Commissioned,20,Structure: Expanding retail/wholesale colocation node,https://www.datacenterslist.com/data-centers/ascenty-jdi01-jundiai-jundiai
+ODATA - SP01 Campus,"Santana de Parnaíba, SP (-23.440, -46.920)",Commissioned,19,Cooling: Delta³ cooling technology,https://dcatlas.io/en/explore/facilities/aligned-data-centers-odata-dc-sp01-data-center-santana-de-parna-ba
+Equinix - SP1,"São Paulo, SP (-23.633, -46.702)",Commissioned,4,Retail Colocation | Connectivity Hub,https://www.equinix.com/data-centers/americas-colocation/brazil-colocation/sao-paulo-data-centers/sp1
+Equinix - SP2,"Tamboré, SP (-23.513, -46.837)",Commissioned,12,Hyperscale ready | Direct cloud ramps,https://www.equinix.com/data-centers/americas-colocation/brazil-colocation/sao-paulo-data-centers/sp2
+Equinix - SP3,"Santana de Parnaíba, SP (-23.438, -46.918)",Commissioned,20,LEED Certified | Liquid Cooling ready,https://www.equinix.com/data-centers/americas-colocation/brazil-colocation/sao-paulo-data-centers/sp3
+Equinix - SP4,"São Paulo, SP (-23.522, -46.687)",Commissioned,6,Enterprise focus | High interconnection,https://www.equinix.com/data-centers/americas-colocation/brazil-colocation/sao-paulo-data-centers/sp4
+Equinix - RJ1,"Rio de Janeiro, RJ (-22.894, -43.218)",Commissioned,3,Subsea cable landing connectivity,https://www.equinix.com/data-centers/americas-colocation/brazil-colocation/rio-de-janeiro-data-centers/rj1
+Equinix - RJ2,"Rio de Janeiro, RJ (-22.883, -43.279)",Commissioned,8,Energy efficient cooling design,https://www.equinix.com/data-centers/americas-colocation/brazil-colocation/rio-de-janeiro-data-centers/rj2
+Ascenty - Campinas 1,"Campinas, SP (-22.855, -47.051)",Commissioned,15,Tier III Certified | Carrier Neutral,https://ascenty.com/en/data-centers/campinas-1/
+Ascenty - Campinas 2,"Campinas, SP (-22.857, -47.052)",Commissioned,10,Extension of Campinas 1 campus,https://ascenty.com/en/data-centers/campinas-2/
+Ascenty - Fortaleza 1,"Fortaleza, CE (-3.785, -38.452)",Commissioned,5,Subsea cable access point,https://ascenty.com/en/data-centers/fortaleza-1/
+Ascenty - Rio de Janeiro 1,"Rio de Janeiro, RJ (-22.895, -43.209)",Commissioned,12,Urban core colocation facility,https://ascenty.com/en/data-centers/rio-de-janeiro-1/
+Ascenty - Rio de Janeiro 2,"Rio de Janeiro, RJ (-22.890, -43.215)",Commissioned,10,Expansion to RJ1 | Free cooling prep,https://ascenty.com/en/data-centers/rio-de-janeiro-2/
+Ascenty - Osasco 1,"Osasco, SP (-23.518, -46.772)",Commissioned,8,Close proximity to SP metro,https://ascenty.com/en/data-centers/osasco-1/
+Ascenty - Osasco 2,"Osasco, SP (-23.520, -46.774)",Planned,15,High density ready | Waterless cooling,https://ascenty.com/en/data-centers-en/location/brazil/
+Ascenty - Paulínia 1,"Paulínia, SP (-22.758, -47.145)",Commissioned,25,Large scale enterprise focus,https://ascenty.com/en/data-centers/paulinia-1/
+ODATA - SP02 Campus,"Hortolândia, SP (-22.863, -47.218)",Commissioned,40,Delta³ cooling | Renewable powered,https://odatacolocation.com/data-centers/brazil/sao-paulo-sp02/
+ODATA - SP03 Campus,"Cotia, SP (-23.604, -46.901)",Commissioned,10,Edge colocation focus,https://odatacolocation.com/data-centers/brazil/sao-paulo-sp03/
+ODATA - RJ01 Campus,"Rio de Janeiro, RJ (-22.910, -43.205)",Commissioned,15,High availability | Urban footprint,https://odatacolocation.com/data-centers/brazil/rio-de-janeiro-rj01/
+Elea Digital - POA1,"Porto Alegre, RS (-29.988, -51.196)",Commissioned,4,Regional edge | Green energy,https://eleadigital.com/data-centers/poa1/
+Elea Digital - CUR1,"Curitiba, PR (-25.431, -49.274)",Commissioned,5,Southern region hub | Efficient PUE,https://eleadigital.com/data-centers/cur1/
+Elea Digital - BSB1,"Brasília, DF (-15.794, -47.882)",Commissioned,8,Government & Enterprise focus,https://eleadigital.com/data-centers/bsb1/
+Elea Digital - BSB2,"Brasília, DF (-15.801, -47.890)",Planned,12,Hyperscale edge | Closed loop cooling,https://eleadigital.com/data-centers/
+Elea Digital - RIO1,"Rio de Janeiro, RJ (-22.903, -43.207)",Commissioned,6,Financial sector optimized,https://eleadigital.com/data-centers/rio1/
+Elea Digital - RIO2,"Rio de Janeiro, RJ (-22.908, -43.211)",Planned,10,Modernization of existing infrastructure,https://eleadigital.com/data-centers/
+Elea Digital - SPO1,"São Paulo, SP (-23.550, -46.633)",Commissioned,7,Metro SP edge facility,https://eleadigital.com/data-centers/spo1/
+V.tal - Fortaleza Edge,"Fortaleza, CE (-3.750, -38.480)",Commissioned,3,Subsea cable integration | Low PUE,https://vtal.com/edge-data-centers/
+V.tal - Rio Edge,"Rio de Janeiro, RJ (-22.915, -43.220)",Commissioned,4,Content delivery optimized,https://vtal.com/edge-data-centers/
+V.tal - SP Edge,"São Paulo, SP (-23.560, -46.640)",Commissioned,5,5G node support | Distributed cooling,https://vtal.com/edge-data-centers/
+V.tal - Porto Alegre Edge,"Porto Alegre, RS (-30.030, -51.220)",Commissioned,2,Regional distribution,https://vtal.com/edge-data-centers/
+V.tal - Barranquilla Edge (Brazil Linked),Brazil-Colombia Subsea Hub,Planned,4,International gateway,https://vtal.com/edge-data-centers/
+HostDime - João Pessoa,"João Pessoa, PB (-7.115, -34.863)",Commissioned,5,Tier IV Design | Sustainable build,https://www.hostdime.com/data-centers/brazil/
+HostDime - São Paulo,"São Paulo, SP (-23.570, -46.650)",Commissioned,2,Retail web hosting focus,https://www.hostdime.com/data-centers/brazil/
+Angola Cables - AngoNAP Fortaleza,"Fortaleza, CE (-3.765, -38.475)",Commissioned,10,SACS & Monet subsea cables | Tier III,https://www.angolacables.co.ao/en/angonap-fortaleza/
+Telxius - Fortaleza Hub,"Fortaleza, CE (-3.770, -38.460)",Commissioned,8,BRUSA and SAM-1 subsea connection,https://telxius.com/data-centers/
+Telxius - Rio Hub,"Rio de Janeiro, RJ (-22.920, -43.230)",Commissioned,6,Telecommunications backbone,https://telxius.com/data-centers/
+Telefonica/Vivo - SP Data Center,"Santana de Parnaíba, SP (-23.450, -46.900)",Commissioned,25,Telecom core | High efficiency cooling,https://www.vivo.com.br/
+Telefonica/Vivo - Curitiba Data Center,"Curitiba, PR (-25.440, -49.280)",Commissioned,10,Regional telecom hub,https://www.vivo.com.br/
+Claro (Embratel) - Lapa Data Center,"São Paulo, SP (-23.520, -46.690)",Commissioned,15,Enterprise cloud services,https://www.embratel.com.br/
+Claro (Embratel) - Rio Data Center,"Rio de Janeiro, RJ (-22.930, -43.240)",Commissioned,12,Government & corporate hosting,https://www.embratel.com.br/
+Amazon Web Services (AWS) - GRU Edge,"São Paulo, SP (-23.580, -46.660)",Commissioned,Undisclosed,AWS Local Zone | Highly modular,https://aws.amazon.com/about-aws/global-infrastructure/localzones/locations/
+Amazon Web Services (AWS) - RJ Edge,"Rio de Janeiro, RJ (-22.940, -43.250)",Planned,Undisclosed,AWS Local Zone expansion,https://aws.amazon.com/about-aws/global-infrastructure/localzones/locations/
+Microsoft Azure - Brazil South (SP),São Paulo State,Commissioned,Undisclosed,Azure Region Hub | Water efficiency focus,https://azure.microsoft.com/en-us/global-infrastructure/geographies/
+Microsoft Azure - Brazil Southeast (RJ),Rio de Janeiro State,Commissioned,Undisclosed,Azure Secondary Region,https://azure.microsoft.com/en-us/global-infrastructure/geographies/
+Google Cloud - Southamerica-east1 (SP),Osasco/São Paulo region,Commissioned,Undisclosed,GCP Region | 100% renewable match,https://cloud.google.com/about/locations
+Oracle Cloud - Vinhedo Region,"Vinhedo, SP",Commissioned,Undisclosed,Enterprise OCI Region,https://www.oracle.com/cloud/public-cloud-regions/
+Oracle Cloud - São Paulo Region,"São Paulo, SP",Commissioned,Undisclosed,Primary OCI Region,https://www.oracle.com/cloud/public-cloud-regions/
+IBM Cloud - São Paulo 1,"São Paulo, SP",Commissioned,Undisclosed,IBM Cloud MZRs,https://www.ibm.com/cloud/data-centers
+IBM Cloud - São Paulo 2,"São Paulo, SP",Commissioned,Undisclosed,Redundancy node,https://www.ibm.com/cloud/data-centers
+IBM Cloud - São Paulo 3,"São Paulo, SP",Commissioned,Undisclosed,High availability zone,https://www.ibm.com/cloud/data-centers
+Huawei Cloud - SP Region,"São Paulo, SP",Commissioned,Undisclosed,Core node for LatAm operations,https://www.huaweicloud.com/intl/en-us/about/locations.html
+Tencent Cloud - SP Region,"São Paulo, SP",Commissioned,Undisclosed,Gaming and media content delivery,https://www.tencentcloud.com/global-infrastructure
+Alibaba Cloud - LatAm Node,"São Paulo, SP",Planned,Undisclosed,Future regional expansion,N/A
+GlobeNet - Fortaleza Data Center,"Fortaleza, CE (-3.780, -38.450)",Commissioned,6,Subsea cable integration,https://globenet.com/
+GlobeNet - Rio de Janeiro Data Center,"Rio de Janeiro, RJ (-22.950, -43.260)",Commissioned,4,Cable landing station expansion,https://globenet.com/
+Seabras-1 (Seaborn Networks) - SP Landing,"Praia Grande, SP (-24.000, -46.400)",Commissioned,2,Cable landing & edge compute,https://seabornnetworks.com/
+Ascenty - Hortolândia 1,"Hortolândia, SP (-22.870, -47.210)",Commissioned,12,Manufacturing sector support,https://ascenty.com/en/data-centers/hortolandia-1/
+Ascenty - Hortolândia 2,"Hortolândia, SP (-22.875, -47.215)",Commissioned,15,Expansion phase,https://ascenty.com/en/data-centers/hortolandia-2/
+Ascenty - Hortolândia 3,"Hortolândia, SP (-22.880, -47.220)",Planned,20,Hyperscale ready architecture,https://ascenty.com/en/data-centers/hortolandia-3/
+Ascenty - Hortolândia 4,"Hortolândia, SP (-22.885, -47.225)",Planned,25,Sustainable cooling designs,https://ascenty.com/en/data-centers/hortolandia-4/
+Scala Data Centers - SP4,"Barueri, SP (-23.500, -46.850)",Commissioned,18,Single-tenant hyperscale build,https://scaladatacenters.com/
+Scala Data Centers - SP5,"Barueri, SP (-23.505, -46.855)",Commissioned,14,Colocation & Cloud Hub,https://scaladatacenters.com/
+Scala Data Centers - CP1,"Campinas, SP (-22.840, -47.040)",Commissioned,22,Regional interconnection,https://scaladatacenters.com/
+Scala Data Centers - CP2,"Campinas, SP (-22.845, -47.045)",Planned,30,AI-ready dense racks,https://scaladatacenters.com/
+Scala Data Centers - RJ1,"Rio de Janeiro, RJ (-22.900, -43.200)",Commissioned,16,Financial district proximity,https://scaladatacenters.com/
+Scala Data Centers - POA1,"Porto Alegre, RS (-30.000, -51.200)",Planned,25,Southern gateway facility,https://scaladatacenters.com/
+ODATA - SP04 Campus,"São Paulo (Metro), SP",Planned,50,Next-gen Delta³ cooling | High density,https://odatacolocation.com/data-centers/brazil/
+ODATA - RJ02 Campus,"Rio de Janeiro (Metro), RJ",Planned,30,Expansion of RJ footprint,https://odatacolocation.com/data-centers/brazil/
+ODATA - CE01 Campus,"Fortaleza, CE",Planned,20,Subsea cable proximity focus,https://odatacolocation.com/data-centers/brazil/
+CloudHQ - SP Campus 2,São Paulo State (TBD),Planned,100+,Future hyperscale landbank,https://cloudhq.com/locations/
+EdgeUno - SP Node,"São Paulo, SP",Commissioned,1,Micro-edge compute,https://edgeuno.com/network/
+EdgeUno - RJ Node,"Rio de Janeiro, RJ",Commissioned,1,Low-latency content delivery,https://edgeuno.com/network/
+EdgeUno - Fortaleza Node,"Fortaleza, CE",Commissioned,1,Northeast edge connectivity,https://edgeuno.com/network/
+EdgeUno - POA Node,"Porto Alegre, RS",Commissioned,1,Southern edge connectivity,https://edgeuno.com/network/
+EdgeUno - Curitiba Node,"Curitiba, PR",Commissioned,1,Regional edge processing,https://edgeuno.com/network/
+Lumen (formerly CenturyLink) - SP1,"São Paulo, SP",Commissioned,5,Enterprise network hub,https://www.lumen.com/en-us/solutions/data-center.html
+Lumen - SP2,"Cotia, SP",Commissioned,8,Secure colocation,https://www.lumen.com/en-us/solutions/data-center.html
+Lumen - RJ1,"Rio de Janeiro, RJ",Commissioned,4,Managed hosting services,https://www.lumen.com/en-us/solutions/data-center.html
+Lumen - Curitiba,"Curitiba, PR",Commissioned,3,Southern regional hub,https://www.lumen.com/en-us/solutions/data-center.html
+Locaweb - SP Core,"São Paulo, SP",Commissioned,4,Web hosting & SMB services,https://www.locaweb.com.br/
+UOL Diveo - Tamboré,"Tamboré, SP",Commissioned,10,IT Outsourcing & Cloud,https://uoldiveo.com.br/
+UOL Diveo - SP Downtown,"São Paulo, SP",Commissioned,6,Urban colocation,https://uoldiveo.com.br/
+Gêneses IT - SP Facility,"São Paulo, SP",Commissioned,2,Managed IT services,N/A
+Algar Telecom - Uberlândia DC,"Uberlândia, MG (-18.918, -48.277)",Commissioned,3,Regional telecom core,https://www.algartelecom.com.br/
+Algar Telecom - Campinas DC,"Campinas, SP",Commissioned,4,Redundant regional node,https://www.algartelecom.com.br/
+Tivit - Inova Parque,"São Paulo, SP",Commissioned,8,Enterprise application hosting,https://tivit.com/
+Tivit - Rio Facility,"Rio de Janeiro, RJ",Commissioned,5,Disaster recovery focus,https://tivit.com/
+Sonda - SP Data Center,"São Paulo, SP",Commissioned,5,IT integration services,https://www.sonda.com/
+B3 (Brazilian Stock Exchange) - DC,"Santana de Parnaíba, SP",Commissioned,8,Ultra-low latency financial trading,https://www.b3.com.br/
+Dataprev (Government) - RJ,"Rio de Janeiro, RJ",Commissioned,5,Social security processing,https://www.dataprev.gov.br/
+Dataprev (Government) - SP,"São Paulo, SP",Commissioned,5,Federal data redundancy,https://www.dataprev.gov.br/
+Dataprev (Government) - DF,"Brasília, DF",Commissioned,4,Capital data processing,https://www.dataprev.gov.br/
+Serpro (Government) - DF,"Brasília, DF",Commissioned,6,Federal tax & vehicle systems,https://www.serpro.gov.br/
+Serpro (Government) - SP,"São Paulo, SP",Commissioned,5,Secure federal hosting,https://www.serpro.gov.br/
+Serpro (Government) - RJ,"Rio de Janeiro, RJ",Commissioned,4,Regional federal node,https://www.serpro.gov.br/
+Banco do Brasil - Principal DC,"Brasília, DF",Commissioned,10,Banking operations core,https://www.bb.com.br/
+Itaú Unibanco - Mogi Mirim DC,"Mogi Mirim, SP",Commissioned,15,Banking mega-complex,https://www.itau.com.br/
+Bradesco - Cidade de Deus DC,"Osasco, SP",Commissioned,12,Financial infrastructure,https://banco.bradesco/
+Caixa Econômica - DF DC,"Brasília, DF",Commissioned,8,Federal banking processing,https://www.caixa.gov.br/
+Copel Telecom - Curitiba DC,"Curitiba, PR",Commissioned,2,State utility telecom node,https://www.copeltelecom.com/
+Cemig Telecom - Belo Horizonte DC,"Belo Horizonte, MG (-19.916, -43.934)",Commissioned,2,Regional utility data hub,N/A
+Telebras - Brasília Hub,"Brasília, DF",Commissioned,3,National broadband network core,https://www.telebras.com.br/
+Eletrobras - Rio Core,"Rio de Janeiro, RJ",Commissioned,2,Energy grid management,https://eletrobras.com/
+Petrobras - Supercomputing Center,"Rio de Janeiro, RJ",Commissioned,10,O&G exploration rendering (Pegasus/Orion),https://petrobras.com.br/
+Globo - Media DC,"Rio de Janeiro, RJ",Commissioned,5,Content creation & broadcast storage,https://globo.com/
+Vtex - SP Commerce Cloud,"São Paulo, SP",Commissioned,2,E-commerce transaction processing,https://vtex.com/

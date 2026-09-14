@@ -28,6 +28,17 @@ var GEN = {
   geo:     {c: "#e87ba4", label: "Geothermal"}
 };
 var GEN_ORDER = ["hydro","wind","solar","bio","oilgas","coal","nuclear","geo"];
+var STATUS_ORDER = ["op", "build", "plan"];
+var PLANT_STATUS = {op: "Operating", build: "Under construction", plan: "Planned"};
+var DC_STATUS    = {op: "Commissioned", build: "Under construction", plan: "Planned"};
+var DC_COLOR = "#d6336c";
+/* curated data centers that sit in or just east of the Ceará study box */
+var CE_DC = [];
+(function () {
+  if (!N.dc) return;
+  for (var i = 0; i < N.dc.lat.length; i++)
+    if (N.dc.lon[i] >= -39.3 && N.dc.lon[i] <= -38.3 && N.dc.lat[i] >= -4.0 && N.dc.lat[i] <= -3.2) CE_DC.push(i);
+})();
 
 /* each continuous layer gets its own single hue, so switching layer reads as a change */
 var SEQ_LAYER = {
@@ -86,13 +97,16 @@ var R = function (lat) { return YMAX - (lat - C.y0) * C.scale; };
 var S = {
   view: "ceara",
   layer: "phase4",
-  overlays: {protected: true, indigenous: true, box: true, gen: true},
+  overlays: {protected: true, indigenous: true, box: true, gen: true, dc: true},
+  genStatus: {op: true, build: true, plan: true},
+  dcStatus: {op: true, build: true, plan: true},
+  dcSel: null,
   filter: "all",
   eps: 0.62, hv: 25, line: 15, idc: 50,
   published: true,
   sel: null,
   natMetric: "score",
-  natOverlays: {grid: true, buses: false, idc: true, gen: true, protected: false, indigenous: false},
+  natOverlays: {grid: true, buses: false, idc: false, gen: true, dc: true, protected: false, indigenous: false},
   natSel: null
 };
 
@@ -111,11 +125,11 @@ function recompute() {
     if (pd > S.eps) r.push("degradation risk above ε");
     if (coerce(C.hvKm[i], S.published) > S.hv) r.push("too far from an HV substation");
     if (coerce(C.lineKm[i], S.published) > S.line) r.push("too far from a transmission line");
-    if (coerce(C.idcKm[i], S.published) > S.idc) r.push("too far from a data-centre anchor");
+    if (coerce(C.idcKm[i], S.published) > S.idc) r.push("too far from a data-center anchor");
     reason[i] = r;
     if (!r.length) { isF[i] = 1; feas.push(i); }
   }
-  // Pareto frontier over the six minimised objectives
+  // Pareto frontier over the six minimized objectives
   var O = [C.oGrid, C.oLat, C.oEner, C.oCurt, C.oRisk, C.oPol];
   var m = feas.length, V = new Float64Array(m * 6);
   for (var a = 0; a < m; a++) for (var k = 0; k < 6; k++) V[a * 6 + k] = O[k][feas[a]];
@@ -157,7 +171,7 @@ var LAYERS = [
 
   {id: "hv",     group: "Infrastructure", name: "Distance to HV substation", note: "km to nearest ONS high-voltage bus"},
   {id: "lineKm", group: "Infrastructure", name: "Distance to transmission line", note: "km to nearest ONS line"},
-  {id: "idcKm",  group: "Infrastructure", name: "Distance to fibre anchor", note: "km to nearest data-centre facility"},
+  {id: "idcKm",  group: "Infrastructure", name: "Distance to fiber anchor", note: "km to nearest data-center facility"},
   {id: "ren",    group: "Infrastructure", name: "Renewables nearby", note: "MW of generation within reach"}
 ];
 
@@ -306,7 +320,9 @@ function drawCeara() {
       });
     });
   }
-  OVER = {gOv: gOv, poly: poly};
+  var gDc = mk("g", {});
+  g.appendChild(gDc);
+  OVER = {gOv: gOv, gDc: gDc, poly: poly};
 
   var minX = Math.min.apply(null, CELL_X0), maxX = Math.max.apply(null, CELL_X0);
   var minY = Math.min.apply(null, CELL_Y0), maxY = Math.max.apply(null, CELL_Y0);
@@ -322,18 +338,25 @@ function drawCeara() {
 
 function ceMove(e) {
     var t = e.target;
+    if (t && t.__dc != null) { showTip(e, dcTip(t.__dc)); return; }
     if (t && t.__i != null && cellVisible(t.__i)) {
       var i = t.__i;
       showTip(e, "<b>" + (RESULT.isShort[i] ? "Recommended site" : RESULT.isFront[i] ? "On the frontier" : RESULT.isFeas[i] ? "Feasible" : "Excluded") + "</b>" +
         "<span class='k'>P<sub>deg</sub></span> <span class='mono'>" + C.pdeg[i].toFixed(3) + "</span> · " +
         "<span class='k'>policy</span> " + C.stringVals[C.string[i]] + "<br>" +
         "<span class='k'>line</span> <span class='mono'>" + C.lineKm[i].toFixed(2) + " km</span> · " +
-        "<span class='k'>fibre</span> <span class='mono'>" + C.idcKm[i].toFixed(1) + " km</span>");
+        "<span class='k'>fiber</span> <span class='mono'>" + C.idcKm[i].toFixed(1) + " km</span>");
     } else hideTip();
 }
 function ceClick(e) {
     var t = e.target;
-    if (t && t.__i != null && cellVisible(t.__i)) { S.sel = t.__i; paintCeara(); renderRight(); }
+    if (t && t.__dc != null) { S.dcSel = t.__dc; S.sel = null; paintCeara(); renderRight(); return; }
+    if (t && t.__i != null && cellVisible(t.__i)) { S.sel = t.__i; S.dcSel = null; paintCeara(); renderRight(); }
+}
+function dcTip(i) {
+  var d = N.dc, mw = d.mw[i] == null ? d.mwNote[i] : (d.mwNote[i] ? d.mwNote[i] + " " : "") + fmt(d.mw[i]) + " MW";
+  return "<b>" + d.nm[i] + "</b><span class='k'>" + DC_STATUS[d.status[i]] + "</span> · <span class='mono'>" + mw + "</span>" +
+         (d.prec[i] !== "exact" ? "<br><span class='k'>location approximate (" + (d.prec[i] === "city" ? "city centroid" : "state only") + ")</span>" : "");
 }
 var OVER = null, CLIP = null, FIT = null;
 
@@ -359,18 +382,53 @@ function paintCeara() {
   if (S.overlays.gen && C.gen) {
     var g = C.gen;
     for (var k = 0; k < g.lat.length; k++) {
+      if (!S.genStatus[g.st[k]]) continue;
       var rr = Math.max(95, Math.min(360, 75 + Math.sqrt(Math.max(g.mw[k], 0)) * 16));
       var col = (GEN[g.tech[k]] || {}).c || css("--outline");
-      var op = g.st[k] === "operating" ? 0.92 : 0.42;
-      OVER.gOv.appendChild(mk("circle", {
-        cx: Q(g.lon[k]), cy: R(g.lat[k]), r: rr, fill: col, "fill-opacity": op,
-        stroke: css("--ink"), "stroke-opacity": .55, "stroke-width": 1.3, "vector-effect": "non-scaling-stroke"
-      }));
+      OVER.gOv.appendChild(plantMarker(Q(g.lon[k]), R(g.lat[k]), rr, col, g.st[k], 1.3));
     }
+  }
+  OVER.gDc.innerHTML = "";
+  if (S.overlays.dc && N.dc) {
+    CE_DC.forEach(function (i) {
+      if (!S.dcStatus[N.dc.status[i]]) return;
+      OVER.gDc.appendChild(dcMarker(Q(N.dc.lon[i]), R(N.dc.lat[i]), dcSize(N.dc.mw[i], 230, 30, 250), N.dc.status[i], i, S.dcSel === i));
+    });
   }
   if (S.sel != null) {
     OVER.gOv.appendChild(mk("circle", {cx: Q(C.lon[S.sel]), cy: R(C.lat[S.sel]), r: 260, fill: "none", stroke: css("--accent"), "stroke-width": 2, "vector-effect": "non-scaling-stroke"}));
   }
+}
+
+/* a power plant: filled = operating, dashed ring = under construction, hollow = planned */
+function plantMarker(cx, cy, r, col, st, ringW) {
+  var a = {cx: cx, cy: cy, r: r, "vector-effect": "non-scaling-stroke"};
+  if (st === "plan") {
+    a.fill = col; a["fill-opacity"] = .14; a.stroke = col; a["stroke-width"] = ringW * 1.5;
+  } else {
+    a.fill = col; a["fill-opacity"] = .85; a.stroke = css("--ink"); a["stroke-opacity"] = st === "build" ? .9 : .5;
+    a["stroke-width"] = st === "build" ? ringW * 1.3 : ringW;
+    if (st === "build") a["stroke-dasharray"] = "3 2";
+  }
+  return mk("circle", a);
+}
+/* a data center: a diamond, same status language as the plants */
+function dcMarker(cx, cy, s, st, idx, selected) {
+  var d = "M" + cx + " " + (cy - s) + "L" + (cx + s) + " " + cy + "L" + cx + " " + (cy + s) + "L" + (cx - s) + " " + cy + "Z";
+  var a = {d: d, "vector-effect": "non-scaling-stroke"};
+  if (st === "plan") { a.fill = DC_COLOR; a["fill-opacity"] = .16; a.stroke = DC_COLOR; a["stroke-width"] = 2; }
+  else { a.fill = DC_COLOR; a["fill-opacity"] = .9; a.stroke = css("--surface"); a["stroke-width"] = 1.4; if (st === "build") { a["stroke-dasharray"] = "3 2"; a.stroke = css("--ink"); } }
+  if (selected) { a.stroke = SELECTED; a["stroke-width"] = 3; a["stroke-dasharray"] = ""; }
+  var p = mk("path", a); p.__dc = idx; p.style.cursor = "pointer";
+  return p;
+}
+function dcSize(mw, base, per, undisclosed) {
+  return mw == null ? undisclosed : Math.max(base, Math.min(base * 4, base * 0.7 + Math.sqrt(mw) * per));
+}
+function statusTally(arr, idxs) {
+  var t = {op: 0, build: 0, plan: 0};
+  (idxs || arr.map(function (_, i) { return i; })).forEach(function (i) { t[arr[i]] = (t[arr[i]] || 0) + 1; });
+  return t;
 }
 
 /* which technologies are actually on screen, with counts, for the legend */
@@ -383,12 +441,12 @@ function genTally(g) {
 
 /* ---------------------------------------------------- national map drawing */
 var NAT_METRICS = [
-  {id: "score", name: "Data-centre suitability score", unit: "", d: 1, ramp: SEQ, get: function (s) { return s.score; }, note: "Composite screening score, 0–100"},
+  {id: "score", name: "Data-center suitability score", unit: "", d: 1, ramp: SEQ, get: function (s) { return s.score; }, note: "Composite screening score, 0–100"},
   {id: "curt",  name: "Renewable power curtailed", unit: " TWh", d: 1, ramp: SEQ_W, get: function (s) { return s.curt; }, note: "Ordered off the grid, Oct 2021 – May 2026"},
   {id: "headroom", name: "Transmission headroom", unit: "", d: 2, ramp: SEQ, get: function (s) { return s.headroom; }, note: "1 = plenty of spare capacity, 0 = none"},
   {id: "renPct", name: "Renewable share of capacity", unit: "%", d: 1, ramp: SEQ, get: function (s) { return s.renPct; }, note: "Share of installed ONS capacity"},
   {id: "instMw", name: "Installed capacity", unit: " MW", d: 0, ramp: SEQ, get: function (s) { return s.instMw; }, note: "ONS-connected generation"},
-  {id: "idcN",  name: "Data-centre facilities", unit: "", d: 0, ramp: SEQ, get: function (s) { return s.idcN; }, note: "PeeringDB + OpenStreetMap points"},
+  {id: "idcN",  name: "Data-center facilities", unit: "", d: 0, ramp: SEQ, get: function (s) { return s.idcN; }, note: "PeeringDB + OpenStreetMap points"},
   {id: "protPct", name: "Protected land", unit: "%", d: 1, ramp: SEQ, get: function (s) { return s.protPct; }, note: "Share of state area in conservation units"},
   {id: "indiPct", name: "Indigenous land", unit: "%", d: 1, ramp: SEQ, get: function (s) { return s.indiPct; }, note: "Share of state area in indigenous territories"}
 ];
@@ -404,8 +462,8 @@ function drawNational() {
   svg.innerHTML = "";
   stateNodes = {};
   var g = mk("g", {});
-  var gStates = mk("g", {}), gLines = mk("g", {"pointer-events": "none"}), gPts = mk("g", {"pointer-events": "none"});
-  g.appendChild(gStates); g.appendChild(gLines); g.appendChild(gPts);
+  var gStates = mk("g", {}), gLines = mk("g", {"pointer-events": "none"}), gPts = mk("g", {"pointer-events": "none"}), gDc = mk("g", {});
+  g.appendChild(gStates); g.appendChild(gLines); g.appendChild(gPts); g.appendChild(gDc);
   svg.appendChild(g);
 
   N.outline.forEach(function (f) {
@@ -418,7 +476,7 @@ function drawNational() {
     stateNodes[f.ab] = p;
   });
 
-  NATL = {lines: gLines, pts: gPts};
+  NATL = {lines: gLines, pts: gPts, dc: gDc};
   FIT = [nx(NAT.minLon), ny(NAT.maxLat), (NAT.maxLon - NAT.minLon) * NK, (NAT.maxLat - NAT.minLat) * NK];
   setHome(FIT[0], FIT[1], FIT[2], FIT[3]);
 
@@ -426,6 +484,7 @@ function drawNational() {
 
 function natMove(e) {
     var t = e.target;
+    if (t && t.__dc != null) { showTip(e, dcTip(t.__dc)); return; }
     if (t && t.__ab) {
       var s = byAb(t.__ab), m = natMetric();
       showTip(e, "<b>" + s.nm + "</b><span class='k'>" + m.name + "</span> <span class='mono'>" + fmt(m.get(s), m.d) + m.unit + "</span><br><span class='k'>rank</span> <span class='mono'>#" + s.rank + "</span> · " + s.tier.split(" - ")[0]);
@@ -433,7 +492,8 @@ function natMove(e) {
 }
 function natClick(e) {
     var t = e.target;
-    if (t && t.__ab) { S.natSel = t.__ab; paintNational(); renderRight(); }
+    if (t && t.__dc != null) { S.dcSel = t.__dc; S.natSel = null; paintNational(); renderRight(); return; }
+    if (t && t.__ab) { S.natSel = t.__ab; S.dcSel = null; paintNational(); renderRight(); }
 }
 svg.addEventListener("pointermove", function (e) { (S.view === "ceara" ? ceMove : natMove)(e); });
 svg.addEventListener("click", function (e) { (S.view === "ceara" ? ceClick : natClick)(e); });
@@ -450,7 +510,7 @@ function paintNational() {
     node.setAttribute("stroke", S.natSel === s.ab ? SELECTED : css("--surface"));
     node.setAttribute("stroke-width", S.natSel === s.ab ? 3.2 : 1);
   });
-  // lift the selected state so neighbours cannot paint over its outline
+  // lift the selected state so neighbors cannot paint over its outline
   if (S.natSel && stateNodes[S.natSel]) stateNodes[S.natSel].parentNode.appendChild(stateNodes[S.natSel]);
 
   NATL.lines.innerHTML = ""; NATL.pts.innerHTML = "";
@@ -488,12 +548,21 @@ function paintNational() {
   if (S.natOverlays.gen && N.gen) {
     var gg = N.gen;
     for (var q = 0; q < gg.lat.length; q++) {
+      if (!S.genStatus[gg.st[q]]) continue;
       var rr2 = Math.max(20, Math.min(190, 14 + Math.sqrt(Math.max(gg.mw[q], 0)) * 4.2));
-      NATL.pts.appendChild(mk("circle", {
-        cx: nx(gg.lon[q]).toFixed(0), cy: ny(gg.lat[q]).toFixed(0), r: rr2.toFixed(0),
-        fill: (GEN[gg.tech[q]] || {}).c || css("--outline"), "fill-opacity": .78,
-        stroke: css("--ink"), "stroke-opacity": .4, "stroke-width": 0.6, "vector-effect": "non-scaling-stroke"
-      }));
+      NATL.pts.appendChild(plantMarker(+nx(gg.lon[q]).toFixed(0), +ny(gg.lat[q]).toFixed(0), +rr2.toFixed(0), (GEN[gg.tech[q]] || {}).c || css("--outline"), gg.st[q], 0.7));
+    }
+  }
+  NATL.dc.innerHTML = "";
+  if (S.natOverlays.dc && N.dc) {
+    var dd = N.dc;
+    for (var w = 0; w < dd.lat.length; w++) {
+      if (!S.dcStatus[dd.status[w]]) continue;
+      NATL.dc.appendChild(dcMarker(+nx(dd.lon[w]).toFixed(0), +ny(dd.lat[w]).toFixed(0), dcSize(dd.mw[w], 60, 5.5, 70), dd.status[w], w, S.dcSel === w));
+    }
+    if (S.dcSel != null && dd.status[S.dcSel] != null) {
+      var selNode = NATL.dc.querySelector("path:last-child"); // keep selection on top
+      NATL.dc.childNodes.forEach(function (n) { if (n.__dc === S.dcSel) NATL.dc.appendChild(n); });
     }
   }
   // mark the case study
@@ -568,7 +637,10 @@ function renderLeft() {
     go.appendChild(check("ovProt", "Protected areas", "Conservation units", S.overlays.protected, function (v) { S.overlays.protected = v; paintCeara(); }));
     go.appendChild(check("ovIndi", "Indigenous land", "Demarcated territories", S.overlays.indigenous, function (v) { S.overlays.indigenous = v; paintCeara(); }));
     go.appendChild(check("ovBox", "Study box", "50 km × 50 km", S.overlays.box, function (v) { S.overlays.box = v; paintCeara(); }));
-    go.appendChild(check("ovGen", "Power plants", "Coloured by generation type", S.overlays.gen, function (v) { S.overlays.gen = v; paintCeara(); renderRight(); }));
+    go.appendChild(check("ovGen", "Power plants", "Colored by generation type", S.overlays.gen, function (v) { S.overlays.gen = v; paintCeara(); renderRight(); }));
+    statusChecks("ovGenSt", S.genStatus, function () { paintCeara(); renderRight(); }).forEach(function (n) { go.appendChild(n); });
+    go.appendChild(check("ovDc", "Data centers — curated list", "Fortaleza facilities, just east of the box; zoom out to see them", S.overlays.dc, function (v) { S.overlays.dc = v; paintCeara(); renderRight(); }));
+    statusChecks("ovDcSt", S.dcStatus, function () { paintCeara(); renderRight(); }).forEach(function (n) { go.appendChild(n); });
     rail.appendChild(go);
 
     var gt = el("div", {class: "group"});
@@ -577,7 +649,7 @@ function renderLeft() {
     gt.appendChild(slider("sEps", "Degradation cap &epsilon;", 0.2, 1, 0.01, S.eps, "", function (v) { S.eps = v; refreshModel(); }));
     gt.appendChild(slider("sHv", "Max distance to HV bus", 1, 60, 1, S.hv, " km", function (v) { S.hv = v; refreshModel(); }));
     gt.appendChild(slider("sLine", "Max distance to line", 1, 60, 1, S.line, " km", function (v) { S.line = v; refreshModel(); }));
-    gt.appendChild(slider("sIdc", "Max distance to fibre", 1, 120, 1, S.idc, " km", function (v) { S.idc = v; refreshModel(); }));
+    gt.appendChild(slider("sIdc", "Max distance to fiber", 1, 120, 1, S.idc, " km", function (v) { S.idc = v; refreshModel(); }));
     var br = el("div", {class: "btnrow"});
     var reset = el("button", {class: "btn", text: "Reset to published values"});
     reset.onclick = function () {
@@ -598,7 +670,7 @@ function renderLeft() {
 
   } else {
     var gm = el("div", {class: "group"});
-    gm.appendChild(el("div", {class: "eyebrow", text: "Colour states by"}));
+    gm.appendChild(el("div", {class: "eyebrow", text: "Color states by"}));
     NAT_METRICS.forEach(function (m) {
       gm.appendChild(radio("nat", m.id, m.name, m.note, S.natMetric === m.id, function (id) {
         S.natMetric = id; paintNational(); renderRight();
@@ -610,8 +682,11 @@ function renderLeft() {
     gno.appendChild(el("div", {class: "eyebrow", text: "Overlays"}));
     gno.appendChild(check("nGrid", "Transmission network", "1,838 ONS lines", S.natOverlays.grid, function (v) { S.natOverlays.grid = v; paintNational(); renderRight(); }));
     gno.appendChild(check("nBus", "Substations", "1,705 ONS buses", S.natOverlays.buses, function (v) { S.natOverlays.buses = v; paintNational(); renderRight(); }));
-    gno.appendChild(check("nIdc", "Data centres", "336 PeeringDB + OSM facilities", S.natOverlays.idc, function (v) { S.natOverlays.idc = v; paintNational(); renderRight(); }));
-    gno.appendChild(check("nGen", "Power plants", "Coloured by generation type", S.natOverlays.gen, function (v) { S.natOverlays.gen = v; paintNational(); renderRight(); }));
+    gno.appendChild(check("nDc", "Data centers — curated list", (N.dc ? N.dc.nm.length : 0) + " facilities with status, MW and cooling notes", S.natOverlays.dc, function (v) { S.natOverlays.dc = v; paintNational(); renderRight(); }));
+    statusChecks("nDcSt", S.dcStatus, function () { paintNational(); renderRight(); }).forEach(function (n) { gno.appendChild(n); });
+    gno.appendChild(check("nGen", "Power plants", "Colored by generation type", S.natOverlays.gen, function (v) { S.natOverlays.gen = v; paintNational(); renderRight(); }));
+    statusChecks("nGenSt", S.genStatus, function () { paintNational(); renderRight(); }).forEach(function (n) { gno.appendChild(n); });
+    gno.appendChild(check("nIdc", "Fiber anchors · PeeringDB + OSM", "The 336 points the model measures distance to", S.natOverlays.idc, function (v) { S.natOverlays.idc = v; paintNational(); renderRight(); }));
     gno.appendChild(check("nProt", "Protected areas", "Largest conservation units", S.natOverlays.protected, function (v) { S.natOverlays.protected = v; paintNational(); renderRight(); }));
     gno.appendChild(check("nIndi", "Indigenous land", "Largest demarcated territories", S.natOverlays.indigenous, function (v) { S.natOverlays.indigenous = v; paintNational(); renderRight(); }));
     rail.appendChild(gno);
@@ -637,6 +712,31 @@ function countTile(v, l) {
 }
 function sw(color, label) {
   return el("div", {class: "lg", html: "<span class='sw' style='background:" + color + "'></span><span>" + label + "</span>"});
+}
+/* status glyphs that match the markers: filled, dashed ring, hollow — round for plants, diamond for data centers */
+function glyph(kind, color, diamond) {
+  var base = "display:inline-block;width:11px;height:11px;flex:none;box-sizing:border-box;" +
+             (diamond ? "transform:rotate(45deg) scale(.85);border-radius:1px;" : "border-radius:50%;");
+  var style = kind === "plan" ? base + "border:2px solid " + color + ";background:transparent;"
+            : kind === "build" ? base + "background:" + color + ";border:1.5px dashed " + css("--ink") + ";"
+            : base + "background:" + color + ";border:1px solid rgba(0,0,0,.25);";
+  return "<span style='" + style + "'></span>";
+}
+function swg(kind, color, label, diamond) {
+  return el("div", {class: "lg", html: glyph(kind, color, diamond) + "<span>" + label + "</span>"});
+}
+function subcheck(id, label, checked, onchange) {
+  var inp = el("input", {type: "checkbox", id: id});
+  inp.checked = checked; inp.onchange = function () { onchange(inp.checked); };
+  var sp = el("span", {style: "font-size:12px", text: label});
+  var l = el("label", {class: "opt", style: "margin-left:16px;padding-top:2px;padding-bottom:2px"});
+  l.appendChild(inp); l.appendChild(sp);
+  return l;
+}
+function statusChecks(prefix, store, onchange) {
+  return STATUS_ORDER.map(function (k) {
+    return subcheck(prefix + k, (prefix.indexOf("Dc") >= 0 ? DC_STATUS : PLANT_STATUS)[k], store[k], function (v) { store[k] = v; onchange(); });
+  });
 }
 function rampLegend(stops, lo, hi, d, unit) {
   var w = el("div", {});
@@ -710,13 +810,21 @@ function renderRight() {
       GEN_ORDER.forEach(function (t) {
         if (tally[t]) g2.appendChild(sw(GEN[t].c, GEN[t].label + " (" + tally[t] + ")"));
       });
-      g2.appendChild(el("p", {class: "hint", text: "Circle area follows capacity. Faded circles are proposed or not operating."}));
+      var ct = statusTally(C.gen.st);
+      STATUS_ORDER.forEach(function (k) { if (ct[k]) g2.appendChild(swg(k, css("--muted"), PLANT_STATUS[k] + " (" + ct[k] + ")")); });
+      g2.appendChild(el("p", {class: "hint", text: "Circle area follows capacity."}));
+    }
+    if (S.overlays.dc && CE_DC.length) {
+      var dt = statusTally(N.dc.status, CE_DC);
+      g2.appendChild(el("div", {class: "eyebrow", style: "margin-top:8px", text: "Data centers near the box"}));
+      STATUS_ORDER.forEach(function (k) { if (dt[k]) g2.appendChild(swg(k, DC_COLOR, DC_STATUS[k] + " (" + dt[k] + ")", true)); });
+      g2.appendChild(el("p", {class: "hint", text: "Diamonds, sized by capacity. Click one for its record."}));
     }
     rail.appendChild(g2);
 
     var g3 = el("div", {class: "group"});
-    g3.appendChild(el("div", {class: "eyebrow", text: "Selected cell"}));
-    g3.appendChild(cellRecord());
+    g3.appendChild(el("div", {class: "eyebrow", text: S.dcSel != null ? "Selected facility" : "Selected cell"}));
+    g3.appendChild(S.dcSel != null ? dcRecord(S.dcSel) : cellRecord());
     rail.appendChild(g3);
 
   } else {
@@ -728,22 +836,30 @@ function renderRight() {
     n1.appendChild(rampLegend(m.ramp, Math.min.apply(null, vals), Math.max.apply(null, vals), m.d, m.unit));
     if (S.natOverlays.grid) { n1.appendChild(sw(SEQ[10], "Transmission line, 440 kV and above")); n1.appendChild(sw(css("--outline"), "Transmission line, below 440 kV")); }
     if (S.natOverlays.buses) n1.appendChild(sw(SEQ[7], "ONS substation"));
-    if (S.natOverlays.idc) n1.appendChild(sw(CAT.orange, "Data-centre facility"));
+    if (S.natOverlays.idc) n1.appendChild(sw(CAT.orange, "Fiber anchor (PeeringDB / OSM)"));
+    if (S.natOverlays.dc && N.dc) {
+      var ndt = statusTally(N.dc.status);
+      n1.appendChild(el("div", {class: "eyebrow", style: "margin-top:8px", text: "Data centers — curated"}));
+      STATUS_ORDER.forEach(function (k) { if (ndt[k]) n1.appendChild(swg(k, DC_COLOR, DC_STATUS[k] + " (" + ndt[k] + ")", true)); });
+      n1.appendChild(el("p", {class: "hint", text: "Diamonds, sized by capacity. Click one for status, MW, cooling and source."}));
+    }
     if (S.natOverlays.gen && N.gen) {
       var nt = genTally(N.gen);
       n1.appendChild(el("div", {class: "eyebrow", style: "margin-top:8px", text: "Generation by type"}));
       GEN_ORDER.forEach(function (t) {
         if (nt[t]) n1.appendChild(sw(GEN[t].c, GEN[t].label + " (" + fmt(nt[t]) + ")"));
       });
-      n1.appendChild(el("p", {class: "hint", text: "Operating plants of 5 MW and up. Circle area follows capacity."}));
+      var nst = statusTally(N.gen.st);
+      STATUS_ORDER.forEach(function (k) { if (nst[k]) n1.appendChild(swg(k, css("--muted"), PLANT_STATUS[k] + " (" + fmt(nst[k]) + ")")); });
+      n1.appendChild(el("p", {class: "hint", text: "Plants of 5 MW and up. Circle area follows capacity."}));
     }
     if (S.natOverlays.protected) n1.appendChild(sw(CAT.aqua, "Protected area"));
     if (S.natOverlays.indigenous) n1.appendChild(sw(CAT.orange, "Indigenous land"));
     rail.appendChild(n1);
 
     var n2 = el("div", {class: "group"});
-    n2.appendChild(el("div", {class: "eyebrow", text: "Selected state"}));
-    n2.appendChild(stateRecord(s));
+    n2.appendChild(el("div", {class: "eyebrow", text: S.dcSel != null ? "Selected facility" : "Selected state"}));
+    n2.appendChild(S.dcSel != null ? dcRecord(S.dcSel) : stateRecord(s));
     rail.appendChild(n2);
   }
 }
@@ -794,14 +910,42 @@ function cellRecord() {
   dl.appendChild(kv("Nearest HV substation", C.hvKm[i].toFixed(2) + " km"));
   dl.appendChild(kv("Nearest line", C.lineKm[i].toFixed(2) + " km" + (C.kv[i] ? " · " + C.kv[i] + " kV" : "")));
   dl.appendChild(kv("Substation", "<span style='font-family:inherit'>" + (C.subVals[C.sub[i]] || "—") + "</span>"));
-  dl.appendChild(kv("Nearest data centre", C.idcKm[i].toFixed(1) + " km"));
+  dl.appendChild(kv("Nearest data center", C.idcKm[i].toFixed(1) + " km"));
   dl.appendChild(kv("Renewables nearby", fmt(C.renMw[i], 1) + " MW"));
 
   dl.appendChild(el("div", {class: "sec eyebrow", text: "Phase 4 — objectives (0 best)"}));
-  [["Grid cost", C.oGrid[i]], ["Fibre latency", C.oLat[i]], ["Energy shortfall", C.oEner[i]],
+  [["Grid cost", C.oGrid[i]], ["Fiber latency", C.oLat[i]], ["Energy shortfall", C.oEner[i]],
    ["Curtailment shortfall", C.oCurt[i]], ["Water &amp; land risk", C.oRisk[i]], ["Policy burden", C.oPol[i]]]
     .forEach(function (p) { dl.appendChild(kv(p[0], p[1].toFixed(3))); });
   dl.appendChild(kv("Resilience score", C.score[i].toFixed(2)));
+  box.appendChild(dl);
+  return box;
+}
+
+function dcRecord(i) {
+  var d = N.dc, box = el("div", {class: "record"});
+  var stc = d.status[i] === "op" ? STAT.good : d.status[i] === "build" ? STAT.warn : css("--muted");
+  var precTxt = d.prec[i] === "exact" ? "" : d.prec[i] === "city" ? "location approximate — city centroid" : "location approximate — state only";
+  var mwTxt = d.mw[i] == null ? "<span style='font-family:inherit'>" + d.mwNote[i] + "</span>"
+            : (d.mwNote[i] ? "<span style='font-family:inherit'>" + d.mwNote[i] + " </span>" : "") + fmt(d.mw[i]) + " MW";
+  box.appendChild(el("div", {class: "rh", html:
+    "<div class='t'>" + d.nm[i] + "</div>" +
+    "<div class='s'>" + d.city[i] + (d.st[i] && d.city[i].indexOf(d.st[i]) < 0 ? " · " + d.st[i] : "") + "</div>" +
+    "<div style='margin-top:6px;display:flex;gap:5px;flex-wrap:wrap'>" +
+      pill(DC_STATUS[d.status[i]], stc, stc + "1a") +
+      (precTxt ? pill(precTxt, css("--warn-line"), css("--warn-bg")) : "") +
+    "</div>"}));
+  var dl = el("dl", {});
+  dl.appendChild(kv("Capacity", mwTxt));
+  dl.appendChild(kv("Status, as listed", "<span style='font-family:inherit'>" + d.statusRaw[i] + "</span>"));
+  dl.appendChild(kv("Coordinates", Math.abs(d.lat[i]).toFixed(3) + "°S, " + Math.abs(d.lon[i]).toFixed(3) + "°W"));
+  dl.appendChild(el("div", {class: "sec eyebrow", text: "Cooling & metrics"}));
+  dl.appendChild(el("div", {class: "kv", html: "<dd style='text-align:left;font-family:inherit;margin:0'>" + (d.notes[i] || "—") + "</dd>"}));
+  if (d.url[i]) {
+    dl.appendChild(el("div", {class: "sec eyebrow", text: "Source"}));
+    var host = d.url[i].replace(/^https?:\/\//, "").replace(/\/.*$/, "");
+    dl.appendChild(el("div", {class: "kv", html: "<dd style='text-align:left;font-family:inherit;margin:0'><a href='" + d.url[i] + "' target='_blank' rel='noopener' style='color:var(--accent-ink)'>" + host + "</a></dd>"}));
+  }
   box.appendChild(dl);
   return box;
 }
@@ -826,7 +970,7 @@ function stateRecord(s) {
   dl.appendChild(kv("Proposed capacity", fmt(s.gemPropMw) + " MW"));
   dl.appendChild(kv("ONS substations", fmt(s.busN)));
   dl.appendChild(kv("Transmission length", fmt(s.lineKm) + " km"));
-  dl.appendChild(kv("Data-centre facilities", fmt(s.idcN)));
+  dl.appendChild(kv("Data-center facilities", fmt(s.idcN)));
   dl.appendChild(kv("Protected land", s.protPct.toFixed(2) + "%"));
   dl.appendChild(kv("Indigenous land", s.indiPct.toFixed(2) + "%"));
   box.appendChild(dl);
@@ -848,7 +992,7 @@ function setView(v) {
     : "Drag to pan · scroll to zoom · click a state for its record";
   document.getElementById("topnote").textContent = v === "ceara"
     ? "2,808 H3 cells · 50 km × 50 km box"
-    : "27 states · 1,705 substations · 336 data centres";
+    : "27 states · 1,705 substations · 336 data centers";
   hideTip();
   renderLeft(); renderRight();
   if (v === "ceara") { drawCeara(); paintCeara(); } else { drawNational(); paintNational(); }

@@ -1,14 +1,14 @@
 # Sovereign Compute Nexus Explorer
 
-An interactive map of the Brazil data-centre siting model. Two views:
+An interactive map of the Brazil data-center siting model. Two views:
 
 - **Ceará case study** — all 2,808 H3 resolution-8 cells in the 50 km × 50 km box. Switch the
   fill between the four model phases and the underlying raw fields (NDVI, NDWI, Sentinel-1 VV/VH,
-  land cover, distance to grid and fibre, nearby renewables). Click any cell for its full record.
+  land cover, distance to grid and fiber, nearby renewables). Click any cell for its full record.
   The four threshold sliders re-test every cell and re-sort the Pareto frontier live.
-- **Brazil overview** — all 27 states, colourable by suitability score, curtailed energy,
+- **Brazil overview** — all 27 states, colorable by suitability score, curtailed energy,
   transmission headroom, renewable share, installed capacity, facility count, protected land and
-  indigenous land, with the ONS transmission network, substations and 336 data-centre points as
+  indigenous land, with the ONS transmission network, substations and 336 data-center points as
   overlays.
 
 Everything runs client-side. There is no tile server, no API and no build step — open
@@ -56,12 +56,12 @@ python3 build_data.py
 ```
 
 It pulls from `clean_data/sovereign_compute_nexus/phase4_optimization/phase4_all_h3_scored.geojson`,
-the ONS grid and curtailment CSVs, the merged data-centre point layer, the state suitability table,
+the ONS grid and curtailment CSVs, the merged data-center point layer, the state suitability table,
 and the boundary geometry in `data/`. Re-run it after any pipeline change and the map updates.
 
 ## A defect the explorer exposes
 
-The left rail carries a checkbox labelled **Fix the 0 km bug**, off by default so the map
+The left rail carries a checkbox labeled **Fix the 0 km bug**, off by default so the map
 reproduces the published run exactly (819 feasible, 448 on the frontier, 25 recommended).
 
 `run_scn_phase4_optimization.py` reads each distance as `float(row.get(field, np.inf) or np.inf)`.
@@ -83,8 +83,8 @@ v = np.inf if v is None or (isinstance(v, float) and np.isnan(v)) else float(v)
 ## Sources
 
 ONS Dados Abertos (grid topology, generation, constrained-off records) · geobr / IPEA (states,
-municipalities, conservation units, indigenous lands) · PeeringDB and OpenStreetMap (data-centre
+municipalities, conservation units, indigenous lands) · PeeringDB and OpenStreetMap (data-center
 facilities) · MapBiomas-family land cover and surface water · Copernicus Sentinel-1 and Sentinel-2
 via Google Earth Engine.
 
-Generated 14 September 2026 from `~/Projects/Brazil`.
+Generated September 14, 2026 from `~/Projects/Brazil`.

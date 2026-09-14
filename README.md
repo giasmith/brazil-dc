@@ -318,7 +318,7 @@ python3 scripts/download_brazil_idc_points.py
 
 Two layers were built:
 
-1. A strict OpenStreetMap layer using `telecom=data_center` or `telecom=data_centre`.
+1. A strict OpenStreetMap layer using `telecom=data_center` or `telecom=data_center`.
 2. A larger IDC point layer using PeeringDB public facility data plus unique OSM-only points.
 
 Outputs:

@@ -211,9 +211,17 @@ BX0 = min(p[0] for p in box_xy); BX1 = max(p[0] for p in box_xy)
 BY0 = min(p[1] for p in box_xy); BY1 = max(p[1] for p in box_xy)
 PAD = 0.04
 
-nat_gen = {"lat": [], "lon": [], "tech": [], "mw": []}
+nat_gen = {"lat": [], "lon": [], "tech": [], "mw": [], "st": []}
 ce_gen = {"lat": [], "lon": [], "tech": [], "mw": [], "st": [], "nm": []}
 NAT_MIN_MW = 5.0
+
+def gen_status(raw):
+    """collapse GEM status text to op / build / plan, or None for dead projects"""
+    r = (raw or "").strip().lower()
+    if r == "operating": return "op"
+    if r == "construction": return "build"
+    if r in ("pre-construction", "announced"): return "plan"
+    return None   # cancelled, shelved, mothballed, retired, blank
 
 for fname, tech, capcol, ccols in GEN_FILES:
     path = f"{UP}/clean_data/energy/{fname}"
@@ -227,10 +235,13 @@ for fname, tech, capcol, ccols in GEN_FILES:
             if la is None or lo is None:
                 continue
             mw = num(row.get(capcol)) or 0.0
-            status = (row.get("status") or "").strip().lower()
-            if status == "operating" and mw >= NAT_MIN_MW:
+            status = gen_status(row.get("status"))
+            if status is None:
+                continue
+            if mw >= NAT_MIN_MW:
                 nat_gen["lat"].append(round(la, 3)); nat_gen["lon"].append(round(lo, 3))
                 nat_gen["tech"].append(tech); nat_gen["mw"].append(round(mw, 1))
+                nat_gen["st"].append(status)
             if BX0 - PAD <= lo <= BX1 + PAD and BY0 - PAD <= la <= BY1 + PAD:
                 nm = ""
                 for c in NAME_COLS:
@@ -242,8 +253,83 @@ for fname, tech, capcol, ccols in GEN_FILES:
 
 national["gen"] = nat_gen
 ceara["gen"] = ce_gen
-print(f"generation: {len(nat_gen['lat'])} national (operating, >={NAT_MIN_MW:.0f} MW), "
-      f"{len(ce_gen['lat'])} in the Ceara box")
+import collections as _c
+print(f"generation: {len(nat_gen['lat'])} national (>={NAT_MIN_MW:.0f} MW) "
+      f"{dict(_c.Counter(nat_gen['st']))}, {len(ce_gen['lat'])} in the Ceara box {dict(_c.Counter(ce_gen['st']))}")
+
+# ------------------------------------------ curated Brazilian data-center list
+# map_explorer/data/brazilian_data_centers.csv — operator, status, MW, cooling notes.
+# 50 of 110 rows carry no coordinates; those are placed at the centroid of the
+# same city's located rows ("city"), or at the state capital when only a state
+# is named ("state"). The precision flag travels with each record.
+import re as _re
+_COORD = _re.compile(r'\(\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*\)')
+_STATE_SEAT = {"SP": (-23.550, -46.633), "RJ": (-22.907, -43.196), "CE": (-3.732, -38.527),
+               "DF": (-15.794, -47.882), "RS": (-30.033, -51.230), "PR": (-25.429, -49.271)}
+_CITY_SEED = {"Mogi Mirim, SP": (-22.432, -46.958)}
+
+def _dc_status(v):
+    v = (v or "").strip().lower()
+    if "partial" in v or "construction" in v: return "build"
+    if "planned" in v or "announced" in v: return "plan"
+    return "op"
+
+def _dc_mw(v):
+    v = (v or "").strip()
+    m = _re.match(r'^(\d+(?:\.\d+)?)\s*(\+)?$', v)
+    if not m: return None, (v or "undisclosed")
+    return float(m.group(1)), ("at least" if m.group(2) else "")
+
+def _dc_city(loc):
+    return _re.sub(r'\s*\(.*$', '', loc).replace(" (Metro)", "").strip()
+
+def load_data_centers(path):
+    rows = list(csv.DictReader(open(path, encoding="utf-8")))
+    cent = {}
+    for r_ in rows:
+        m = _COORD.search(r_["Location & Coordinates"])
+        if m:
+            cent.setdefault(_dc_city(r_["Location & Coordinates"]), []).append((float(m.group(1)), float(m.group(2))))
+    cent = {k: (sum(p[0] for p in v) / len(v), sum(p[1] for p in v) / len(v)) for k, v in cent.items()}
+    cent.update(_CITY_SEED)
+    out = {"nm": [], "city": [], "st": [], "lat": [], "lon": [], "prec": [], "status": [],
+           "statusRaw": [], "mw": [], "mwNote": [], "notes": [], "url": []}
+    skipped = []
+    for r_ in rows:
+        loc = r_["Location & Coordinates"].strip()
+        m = _COORD.search(loc)
+        st_m = _re.search(r',\s*([A-Z]{2})\b', loc)
+        st = st_m.group(1) if st_m else ""
+        if m:
+            lat, lon, prec = float(m.group(1)), float(m.group(2)), "exact"
+        elif _dc_city(loc) in cent:
+            lat, lon = cent[_dc_city(loc)]; prec = "city"
+        else:
+            hit = None
+            for ab, xy in _STATE_SEAT.items():
+                if _re.search(r'\b' + ab + r'\b', loc) or (ab == "SP" and "São Paulo" in loc) or (ab == "RJ" and "Rio de Janeiro" in loc):
+                    hit = (ab, xy); break
+            if not hit:
+                skipped.append(r_["Operator & Campus"]); continue
+            st = st or hit[0]; lat, lon = hit[1]; prec = "state"
+        mw, mwnote = _dc_mw(r_["Total Capacity (MW)"])
+        url = r_["Official Documentation"].strip()
+        out["nm"].append(r_["Operator & Campus"].strip()); out["city"].append(_dc_city(loc)); out["st"].append(st)
+        out["lat"].append(round(lat, 4)); out["lon"].append(round(lon, 4)); out["prec"].append(prec)
+        out["status"].append(_dc_status(r_["Status"])); out["statusRaw"].append(r_["Status"].strip())
+        out["mw"].append(mw); out["mwNote"].append(mwnote)
+        out["notes"].append(r_["Cooling & Important Metrics"].strip())
+        out["url"].append("" if url.lower() == "n/a" else url)
+    return out, skipped
+
+DC_PATH = f"{OUT}/data/brazilian_data_centers.csv"
+if os.path.exists(DC_PATH):
+    dc, dc_skipped = load_data_centers(DC_PATH)
+    national["dc"] = dc
+    print(f"data centers: {len(dc['nm'])} placed {dict(_c.Counter(dc['prec']))}, "
+          f"status {dict(_c.Counter(dc['status']))}, skipped {dc_skipped}")
+else:
+    print("data centers: csv not found, layer omitted")
 
 payload = {"ceara": ceara, "national": national,
            "meta": {"generated": "2026-09-14", "source": "~/Projects/Brazil"}}
