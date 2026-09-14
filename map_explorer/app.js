@@ -267,10 +267,28 @@ function toUser(ev) {
   var r = svg.getBoundingClientRect();
   return {x: VB.x + (ev.clientX - r.left) / r.width * VB.w, y: VB.y + (ev.clientY - r.top) / r.height * VB.h};
 }
+// Pointer capture (needed for panning) retargets pointerup and the resulting click to the <svg>
+// itself, so e.target never carries __ab / __i / __dc. Resolve the element under the cursor instead,
+// and remember where the pointer went down so a pan release is not mistaken for a click.
+var DOWN_AT = null;
+function pick(e) {
+  var t = e.target;
+  if (t && (t.__dc != null || t.__i != null || t.__ab)) return t;
+  if (!document.elementsFromPoint) return null;
+  var list = document.elementsFromPoint(e.clientX, e.clientY);
+  for (var k = 0; k < list.length; k++) {
+    var n = list[k];
+    if (n.__dc != null || n.__i != null || n.__ab) return n;
+    if (n === svg) break;
+  }
+  return null;
+}
+function wasDrag(e) { return DOWN_AT != null && Math.hypot(e.clientX - DOWN_AT.x, e.clientY - DOWN_AT.y) > 6; }
 (function bindMap() {
   var dragging = false, last = null;
   svg.addEventListener("pointerdown", function (e) {
-    dragging = true; last = toUser(e); svg.classList.add("drag"); svg.setPointerCapture(e.pointerId);
+    dragging = true; last = toUser(e); DOWN_AT = {x: e.clientX, y: e.clientY};
+    svg.classList.add("drag"); svg.setPointerCapture(e.pointerId);
   });
   svg.addEventListener("pointermove", function (e) {
     if (dragging) {
@@ -337,7 +355,7 @@ function drawCeara() {
 }
 
 function ceMove(e) {
-    var t = e.target;
+    var t = pick(e);
     if (t && t.__dc != null) { showTip(e, dcTip(t.__dc)); return; }
     if (t && t.__i != null && cellVisible(t.__i)) {
       var i = t.__i;
@@ -349,7 +367,8 @@ function ceMove(e) {
     } else hideTip();
 }
 function ceClick(e) {
-    var t = e.target;
+    if (wasDrag(e)) return;
+    var t = pick(e);
     if (t && t.__dc != null) { S.dcSel = t.__dc; S.sel = null; paintCeara(); renderRight(); return; }
     if (t && t.__i != null && cellVisible(t.__i)) { S.sel = t.__i; S.dcSel = null; paintCeara(); renderRight(); }
 }
@@ -483,7 +502,7 @@ function drawNational() {
 }
 
 function natMove(e) {
-    var t = e.target;
+    var t = pick(e);
     if (t && t.__dc != null) { showTip(e, dcTip(t.__dc)); return; }
     if (t && t.__ab) {
       var s = byAb(t.__ab), m = natMetric();
@@ -491,7 +510,8 @@ function natMove(e) {
     } else hideTip();
 }
 function natClick(e) {
-    var t = e.target;
+    if (wasDrag(e)) return;
+    var t = pick(e);
     if (t && t.__dc != null) { S.dcSel = t.__dc; S.natSel = null; paintNational(); renderRight(); return; }
     if (t && t.__ab) { S.natSel = t.__ab; S.dcSel = null; paintNational(); renderRight(); }
 }
