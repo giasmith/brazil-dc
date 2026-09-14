@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Sovereign Compute Nexus Explorer: a satellite whose body is an H3 cell -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#4a3aa7"/><stop offset="1" stop-color="#2a2270"/>
+    </linearGradient>
+    <linearGradient id="panel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3cd39a"/><stop offset="1" stop-color="#1baf7a"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="url(#bg)"/>
+  <g transform="translate(32 34.5) scale(1.24) translate(-32 -33)">
+    <!-- solar panels -->
+    <rect x="5.5"  y="26" width="14" height="13" rx="2" fill="url(#panel)"/>
+    <rect x="44.5" y="26" width="14" height="13" rx="2" fill="url(#panel)"/>
+    <path d="M10.2 26v13M14.8 26v13M49.2 26v13M53.8 26v13" stroke="#0f3f2b" stroke-opacity=".35" stroke-width="1.2"/>
+    <!-- struts -->
+    <rect x="19.5" y="31" width="4" height="3" fill="#ffffff" opacity=".9"/>
+    <rect x="40.5" y="31" width="4" height="3" fill="#ffffff" opacity=".9"/>
+    <!-- hexagon body -->
+    <polygon points="32,19.5 43,25.75 43,38.25 32,44.5 21,38.25 21,25.75" fill="#ffffff"/>
+    <polygon points="32,23 39.9,27.5 39.9,36.5 32,41 24.1,36.5 24.1,27.5" fill="#eaf2fd"/>
+    <!-- face -->
+    <circle cx="28.5" cy="31" r="1.8" fill="#2a2270"/>
+    <circle cx="35.5" cy="31" r="1.8" fill="#2a2270"/>
+    <path d="M28.3 35.6q3.7 2.8 7.4 0" stroke="#2a2270" stroke-width="1.7" stroke-linecap="round" fill="none"/>
+    <!-- antenna and signal -->
+    <rect x="31" y="13.5" width="2" height="6.5" rx="1" fill="#ffffff"/>
+    <circle cx="32" cy="12" r="2.6" fill="#eb6834"/>
+    <path d="M26 9a8 8 0 0 1 12 0" stroke="#ffb28a" stroke-width="1.8" stroke-linecap="round" fill="none" opacity=".9"/>
+  </g>
+</svg>
