@@ -3,10 +3,45 @@
 var D = window.SCN, C = D.ceara, N = D.national;
 
 /* ---------------------------------------------------------------- palette */
-var SEQ = ["#cde2fb","#b7d3f6","#9ec5f4","#86b6ef","#6da7ec","#5598e7","#3987e5","#2a78d6","#256abf","#1c5cab","#184f95","#104281","#0d366b"];
-var SEQ_W = ["#fdf0e6","#fbdcc4","#f8c6a0","#f4ae7c","#ef955c","#e87c40","#dd642b","#cb5020","#b33f19","#963012","#77230d"];
+var RAMPS = {
+  blue:   ["#cde2fb","#b7d3f6","#9ec5f4","#86b6ef","#6da7ec","#5598e7","#3987e5","#2a78d6","#256abf","#1c5cab","#184f95","#104281","#0d366b"],
+  red:    ["#fde6e0","#fbcfc5","#f8b3a5","#f39483","#ec7663","#e05a48","#cd4636","#b4372a","#982c21","#7b231a","#5f1a13"],
+  green:  ["#e2f4e2","#c3e8c5","#9dd9a3","#73c87d","#4cb55c","#2f9f42","#228734","#1a6f2a","#145720","#0e4117"],
+  teal:   ["#d9f1f3","#b5e4e9","#8ad3db","#5cbfca","#36a9b6","#2390a0","#1b7789","#155f70","#104857","#0b333e"],
+  violet: ["#e8e4fa","#d3cbf4","#b8abec","#9b8ae1","#7f6cd4","#6855c2","#5544ab","#44378e","#352b72","#272057"],
+  amber:  ["#fdf0e6","#fbdcc4","#f8c6a0","#f4ae7c","#ef955c","#e87c40","#dd642b","#cb5020","#b33f19","#963012","#77230d"]
+};
+var SEQ = RAMPS.blue, SEQ_W = RAMPS.amber;
 var CAT  = {blue:"#2a78d6", orange:"#eb6834", aqua:"#1baf7a"};
 var STAT = {good:"#0ca30c", warn:"#fab219", crit:"#d03b3b"};
+var SELECTED = "#e03131";
+
+/* generation technologies — one hue each, used on both maps and in the legend */
+var GEN = {
+  hydro:   {c: "#1c5cab", label: "Hydropower"},
+  wind:    {c: "#0e9bc4", label: "Wind"},
+  solar:   {c: "#eda100", label: "Solar"},
+  bio:     {c: "#008300", label: "Bioenergy"},
+  oilgas:  {c: "#eb6834", label: "Oil & gas"},
+  coal:    {c: "#6f594a", label: "Coal"},
+  nuclear: {c: "#7a5fd3", label: "Nuclear"},
+  geo:     {c: "#e87ba4", label: "Geothermal"}
+};
+var GEN_ORDER = ["hydro","wind","solar","bio","oilgas","coal","nuclear","geo"];
+
+/* each continuous layer gets its own single hue, so switching layer reads as a change */
+var SEQ_LAYER = {
+  pdeg:   {arr: "pdeg",   ext: "pdeg",   ramp: "red",    d: 2, unit: ""},
+  score:  {arr: "score",  ext: "score",  ramp: "blue",   d: 0, unit: ""},
+  ndvi:   {arr: "ndvi",   ext: "ndvi",   ramp: "green",  d: 2, unit: ""},
+  ndwi:   {arr: "ndwi",   ext: "ndwi",   ramp: "teal",   d: 2, unit: ""},
+  vv:     {arr: "vv",     ext: "vv",     ramp: "violet", d: 1, unit: " dB"},
+  vh:     {arr: "vh",     ext: "vh",     ramp: "violet", d: 1, unit: " dB"},
+  hv:     {arr: "hvKm",   ext: "hv",     ramp: "amber",  d: 1, unit: " km"},
+  lineKm: {arr: "lineKm", ext: "lineKm", ramp: "amber",  d: 1, unit: " km"},
+  idcKm:  {arr: "idcKm",  ext: "idcKm",  ramp: "amber",  d: 1, unit: " km"},
+  ren:    {arr: "renMw",  ext: "ren",    ramp: "green",  d: 0, unit: " MW"}
+};
 var css  = function (n) { return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); };
 
 function ramp(stops, t) {
@@ -51,13 +86,13 @@ var R = function (lat) { return YMAX - (lat - C.y0) * C.scale; };
 var S = {
   view: "ceara",
   layer: "phase4",
-  overlays: {protected: true, indigenous: true, box: true, grid: false, idc: false},
+  overlays: {protected: true, indigenous: true, box: true, gen: true},
   filter: "all",
   eps: 0.62, hv: 25, line: 15, idc: 50,
   published: true,
   sel: null,
   natMetric: "score",
-  natOverlays: {grid: true, buses: false, idc: true, protected: false, indigenous: false},
+  natOverlays: {grid: true, buses: false, idc: true, gen: true, protected: false, indigenous: false},
   natSel: null
 };
 
@@ -165,17 +200,12 @@ function cellFill(i) {
       var s = C.stringVals[C.string[i]];
       return s === "Low" ? STAT.good : s === "Medium" ? STAT.warn : STAT.crit;
     }
-    case "pdeg":   return ramp(SEQ, (C.pdeg[i] - EXT.pdeg[0]) / (EXT.pdeg[1] - EXT.pdeg[0]));
-    case "score":  return ramp(SEQ, (C.score[i] - EXT.score[0]) / (EXT.score[1] - EXT.score[0]));
-    case "ndvi":   return ramp(SEQ, (C.ndvi[i] - EXT.ndvi[0]) / (EXT.ndvi[1] - EXT.ndvi[0]));
-    case "ndwi":   return ramp(SEQ, (C.ndwi[i] - EXT.ndwi[0]) / (EXT.ndwi[1] - EXT.ndwi[0]));
-    case "vv":     return ramp(SEQ, (C.vv[i] - EXT.vv[0]) / (EXT.vv[1] - EXT.vv[0]));
-    case "vh":     return ramp(SEQ, (C.vh[i] - EXT.vh[0]) / (EXT.vh[1] - EXT.vh[0]));
     case "lulc":   return LULC_GROUP[C.lulcVals[C.lulc[i]]] || css("--neutral");
-    case "hv":     return ramp(SEQ_W, (C.hvKm[i] - EXT.hv[0]) / (EXT.hv[1] - EXT.hv[0]));
-    case "lineKm": return ramp(SEQ_W, (C.lineKm[i] - EXT.lineKm[0]) / (EXT.lineKm[1] - EXT.lineKm[0]));
-    case "idcKm":  return ramp(SEQ_W, (C.idcKm[i] - EXT.idcKm[0]) / (EXT.idcKm[1] - EXT.idcKm[0]));
-    case "ren":    return ramp(SEQ, (C.renMw[i] - EXT.ren[0]) / (EXT.ren[1] - EXT.ren[0]));
+  }
+  var cfg = SEQ_LAYER[S.layer];
+  if (cfg) {
+    var e = EXT[cfg.ext];
+    return ramp(RAMPS[cfg.ramp], (C[cfg.arr][i] - e[0]) / (e[1] - e[0]));
   }
   return css("--neutral");
 }
@@ -288,8 +318,9 @@ function drawCeara() {
   gOv.setAttribute("clip-path", "url(#boxclip)");
   FIT = CLIP.slice(); setHome(CLIP[0], CLIP[1], CLIP[2], CLIP[3]);
 
-  svg.addEventListener("pointermove", function (e) {
-    if (S.view !== "ceara") return;
+}
+
+function ceMove(e) {
     var t = e.target;
     if (t && t.__i != null && cellVisible(t.__i)) {
       var i = t.__i;
@@ -299,12 +330,10 @@ function drawCeara() {
         "<span class='k'>line</span> <span class='mono'>" + C.lineKm[i].toFixed(2) + " km</span> · " +
         "<span class='k'>fibre</span> <span class='mono'>" + C.idcKm[i].toFixed(1) + " km</span>");
     } else hideTip();
-  });
-  svg.addEventListener("click", function (e) {
-    if (S.view !== "ceara") return;
+}
+function ceClick(e) {
     var t = e.target;
     if (t && t.__i != null && cellVisible(t.__i)) { S.sel = t.__i; paintCeara(); renderRight(); }
-  });
 }
 var OVER = null, CLIP = null, FIT = null;
 
@@ -327,9 +356,29 @@ function paintCeara() {
     var d = "M" + C.box.map(function (pt) { return Q(pt[0]) + " " + R(pt[1]); }).join("L") + "Z";
     OVER.gOv.appendChild(mk("path", {d: d, fill: "none", stroke: css("--ink2"), "stroke-width": 1.2, "stroke-dasharray": "7 5", "vector-effect": "non-scaling-stroke"}));
   }
+  if (S.overlays.gen && C.gen) {
+    var g = C.gen;
+    for (var k = 0; k < g.lat.length; k++) {
+      var rr = Math.max(95, Math.min(360, 75 + Math.sqrt(Math.max(g.mw[k], 0)) * 16));
+      var col = (GEN[g.tech[k]] || {}).c || css("--outline");
+      var op = g.st[k] === "operating" ? 0.92 : 0.42;
+      OVER.gOv.appendChild(mk("circle", {
+        cx: Q(g.lon[k]), cy: R(g.lat[k]), r: rr, fill: col, "fill-opacity": op,
+        stroke: css("--ink"), "stroke-opacity": .55, "stroke-width": 1.3, "vector-effect": "non-scaling-stroke"
+      }));
+    }
+  }
   if (S.sel != null) {
     OVER.gOv.appendChild(mk("circle", {cx: Q(C.lon[S.sel]), cy: R(C.lat[S.sel]), r: 260, fill: "none", stroke: css("--accent"), "stroke-width": 2, "vector-effect": "non-scaling-stroke"}));
   }
+}
+
+/* which technologies are actually on screen, with counts, for the legend */
+function genTally(g) {
+  var t = {};
+  if (!g) return t;
+  for (var k = 0; k < g.tech.length; k++) t[g.tech[k]] = (t[g.tech[k]] || 0) + 1;
+  return t;
 }
 
 /* ---------------------------------------------------- national map drawing */
@@ -373,20 +422,21 @@ function drawNational() {
   FIT = [nx(NAT.minLon), ny(NAT.maxLat), (NAT.maxLon - NAT.minLon) * NK, (NAT.maxLat - NAT.minLat) * NK];
   setHome(FIT[0], FIT[1], FIT[2], FIT[3]);
 
-  svg.addEventListener("pointermove", function (e) {
-    if (S.view !== "brazil") return;
+}
+
+function natMove(e) {
     var t = e.target;
     if (t && t.__ab) {
       var s = byAb(t.__ab), m = natMetric();
       showTip(e, "<b>" + s.nm + "</b><span class='k'>" + m.name + "</span> <span class='mono'>" + fmt(m.get(s), m.d) + m.unit + "</span><br><span class='k'>rank</span> <span class='mono'>#" + s.rank + "</span> · " + s.tier.split(" - ")[0]);
     } else hideTip();
-  });
-  svg.addEventListener("click", function (e) {
-    if (S.view !== "brazil") return;
+}
+function natClick(e) {
     var t = e.target;
     if (t && t.__ab) { S.natSel = t.__ab; paintNational(); renderRight(); }
-  });
 }
+svg.addEventListener("pointermove", function (e) { (S.view === "ceara" ? ceMove : natMove)(e); });
+svg.addEventListener("click", function (e) { (S.view === "ceara" ? ceClick : natClick)(e); });
 var NATL = null;
 function byAb(ab) { return N.states.filter(function (s) { return s.ab === ab; })[0]; }
 
@@ -397,9 +447,11 @@ function paintNational() {
     var node = stateNodes[s.ab]; if (!node) return;
     var t = hi > lo ? (m.get(s) - lo) / (hi - lo) : 0.5;
     node.setAttribute("fill", ramp(m.ramp, t));
-    node.setAttribute("stroke", S.natSel === s.ab ? css("--ink") : css("--surface"));
-    node.setAttribute("stroke-width", S.natSel === s.ab ? 2.4 : 1);
+    node.setAttribute("stroke", S.natSel === s.ab ? SELECTED : css("--surface"));
+    node.setAttribute("stroke-width", S.natSel === s.ab ? 3.2 : 1);
   });
+  // lift the selected state so neighbours cannot paint over its outline
+  if (S.natSel && stateNodes[S.natSel]) stateNodes[S.natSel].parentNode.appendChild(stateNodes[S.natSel]);
 
   NATL.lines.innerHTML = ""; NATL.pts.innerHTML = "";
   if (S.natOverlays.protected) N.protected.forEach(function (f) {
@@ -431,6 +483,17 @@ function paintNational() {
     var ic = N.idc;
     for (var j = 0; j < ic.lat.length; j++) {
       NATL.pts.appendChild(mk("circle", {cx: nx(ic.lon[j]).toFixed(0), cy: ny(ic.lat[j]).toFixed(0), r: 62, fill: CAT.orange, "fill-opacity": .8, stroke: css("--surface"), "stroke-width": 16}));
+    }
+  }
+  if (S.natOverlays.gen && N.gen) {
+    var gg = N.gen;
+    for (var q = 0; q < gg.lat.length; q++) {
+      var rr2 = Math.max(20, Math.min(190, 14 + Math.sqrt(Math.max(gg.mw[q], 0)) * 4.2));
+      NATL.pts.appendChild(mk("circle", {
+        cx: nx(gg.lon[q]).toFixed(0), cy: ny(gg.lat[q]).toFixed(0), r: rr2.toFixed(0),
+        fill: (GEN[gg.tech[q]] || {}).c || css("--outline"), "fill-opacity": .78,
+        stroke: css("--ink"), "stroke-opacity": .4, "stroke-width": 0.6, "vector-effect": "non-scaling-stroke"
+      }));
     }
   }
   // mark the case study
@@ -505,6 +568,7 @@ function renderLeft() {
     go.appendChild(check("ovProt", "Protected areas", "Conservation units", S.overlays.protected, function (v) { S.overlays.protected = v; paintCeara(); }));
     go.appendChild(check("ovIndi", "Indigenous land", "Demarcated territories", S.overlays.indigenous, function (v) { S.overlays.indigenous = v; paintCeara(); }));
     go.appendChild(check("ovBox", "Study box", "50 km × 50 km", S.overlays.box, function (v) { S.overlays.box = v; paintCeara(); }));
+    go.appendChild(check("ovGen", "Power plants", "Coloured by generation type", S.overlays.gen, function (v) { S.overlays.gen = v; paintCeara(); renderRight(); }));
     rail.appendChild(go);
 
     var gt = el("div", {class: "group"});
@@ -547,6 +611,7 @@ function renderLeft() {
     gno.appendChild(check("nGrid", "Transmission network", "1,838 ONS lines", S.natOverlays.grid, function (v) { S.natOverlays.grid = v; paintNational(); renderRight(); }));
     gno.appendChild(check("nBus", "Substations", "1,705 ONS buses", S.natOverlays.buses, function (v) { S.natOverlays.buses = v; paintNational(); renderRight(); }));
     gno.appendChild(check("nIdc", "Data centres", "336 PeeringDB + OSM facilities", S.natOverlays.idc, function (v) { S.natOverlays.idc = v; paintNational(); renderRight(); }));
+    gno.appendChild(check("nGen", "Power plants", "Coloured by generation type", S.natOverlays.gen, function (v) { S.natOverlays.gen = v; paintNational(); renderRight(); }));
     gno.appendChild(check("nProt", "Protected areas", "Largest conservation units", S.natOverlays.protected, function (v) { S.natOverlays.protected = v; paintNational(); renderRight(); }));
     gno.appendChild(check("nIndi", "Indigenous land", "Largest demarcated territories", S.natOverlays.indigenous, function (v) { S.natOverlays.indigenous = v; paintNational(); renderRight(); }));
     rail.appendChild(gno);
@@ -576,7 +641,11 @@ function sw(color, label) {
 function rampLegend(stops, lo, hi, d, unit) {
   var w = el("div", {});
   w.appendChild(el("div", {class: "ramp", style: "background:linear-gradient(90deg," + stops.join(",") + ")"}));
-  w.appendChild(el("div", {class: "rampax", html: "<span class='mono'>" + fmt(lo, d) + (unit || "") + "</span><span class='mono'>" + fmt(hi, d) + (unit || "") + "</span>"}));
+  var mid = lo + (hi - lo) / 2;
+  w.appendChild(el("div", {class: "rampax", html:
+    "<span class='mono'>" + fmt(lo, d) + (unit || "") + "</span>" +
+    "<span class='mono'>" + fmt(mid, d) + "</span>" +
+    "<span class='mono'>" + fmt(hi, d) + (unit || "") + "</span>"}));
   return w;
 }
 function kv(k, v) { return el("div", {class: "kv", html: "<dt>" + k + "</dt><dd class='mono'>" + v + "</dd>"}); }
@@ -630,14 +699,18 @@ function renderRight() {
         break;
       }
       default: {
-        var map = {pdeg: ["pdeg", SEQ, 2, ""], score: ["score", SEQ, 0, ""], ndvi: ["ndvi", SEQ, 2, ""],
-                   ndwi: ["ndwi", SEQ, 2, ""], vv: ["vv", SEQ, 1, " dB"], vh: ["vh", SEQ, 1, " dB"],
-                   hv: ["hv", SEQ_W, 1, " km"], lineKm: ["lineKm", SEQ_W, 1, " km"],
-                   idcKm: ["idcKm", SEQ_W, 1, " km"], ren: ["ren", SEQ, 0, " MW"]};
-        var cfg = map[S.layer];
-        if (cfg) g2.appendChild(rampLegend(cfg[1], EXT[cfg[0]][0], EXT[cfg[0]][1], cfg[2], cfg[3]));
+        var cfg = SEQ_LAYER[S.layer];
+        if (cfg) g2.appendChild(rampLegend(RAMPS[cfg.ramp], EXT[cfg.ext][0], EXT[cfg.ext][1], cfg.d, cfg.unit));
         if (S.layer === "pdeg") g2.appendChild(el("p", {class: "hint", html: "Cells above &epsilon; = " + S.eps.toFixed(2) + " are excluded. 355 cells sit exactly at the 0.90 ceiling."}));
       }
+    }
+    if (S.overlays.gen && C.gen && C.gen.lat.length) {
+      var tally = genTally(C.gen);
+      g2.appendChild(el("div", {class: "eyebrow", style: "margin-top:8px", text: "Power plants in the box"}));
+      GEN_ORDER.forEach(function (t) {
+        if (tally[t]) g2.appendChild(sw(GEN[t].c, GEN[t].label + " (" + tally[t] + ")"));
+      });
+      g2.appendChild(el("p", {class: "hint", text: "Circle area follows capacity. Faded circles are proposed or not operating."}));
     }
     rail.appendChild(g2);
 
@@ -656,6 +729,14 @@ function renderRight() {
     if (S.natOverlays.grid) { n1.appendChild(sw(SEQ[10], "Transmission line, 440 kV and above")); n1.appendChild(sw(css("--outline"), "Transmission line, below 440 kV")); }
     if (S.natOverlays.buses) n1.appendChild(sw(SEQ[7], "ONS substation"));
     if (S.natOverlays.idc) n1.appendChild(sw(CAT.orange, "Data-centre facility"));
+    if (S.natOverlays.gen && N.gen) {
+      var nt = genTally(N.gen);
+      n1.appendChild(el("div", {class: "eyebrow", style: "margin-top:8px", text: "Generation by type"}));
+      GEN_ORDER.forEach(function (t) {
+        if (nt[t]) n1.appendChild(sw(GEN[t].c, GEN[t].label + " (" + fmt(nt[t]) + ")"));
+      });
+      n1.appendChild(el("p", {class: "hint", text: "Operating plants of 5 MW and up. Circle area follows capacity."}));
+    }
     if (S.natOverlays.protected) n1.appendChild(sw(CAT.aqua, "Protected area"));
     if (S.natOverlays.indigenous) n1.appendChild(sw(CAT.orange, "Indigenous land"));
     rail.appendChild(n1);

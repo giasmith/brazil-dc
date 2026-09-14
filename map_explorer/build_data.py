@@ -187,6 +187,64 @@ ceara["indigenous"] = json.load(open(f"{OUT}/data/indigenous_ceara.json"))
 ceara["outline"] = json.load(open(f"{OUT}/data/ceara_outline.json"))
 ceara["box"] = json.load(open(f"{UP}/clean_data/sovereign_compute_nexus/ceara_case_study_box.geojson"))["features"][0]["geometry"]["coordinates"][0]
 
+
+# ------------------------------------------------- generation assets by type
+# The GEM-style tables cover Latin America, not Brazil alone, so every row is
+# filtered on its country column the same way the pipeline scripts do.
+GEN_FILES = [
+    ("wind.csv", "wind", "capacity_(mw)", ("country/area",)),
+    ("solar.csv", "solar", "capacity_(mw)", ("country/area",)),
+    ("hydropower.csv", "hydro", "capacity_(mw)", ("country/area_1", "country/area_2")),
+    ("bioenergy.csv", "bio", "capacity_(mw)", ("country/area",)),
+    ("oil_and_gas_plants.csv", "oilgas", "capacity_(mw)", ("country/area",)),
+    ("coal_plants.csv", "coal", "capacity_(mw)", ("country/area",)),
+    ("nuclear.csv", "nuclear", "capacity_(mw)", ("country/area",)),
+    ("geothermal.csv", "geo", "unit_capacity_(mw)", ("country/area",)),
+]
+NAME_COLS = ("project_name", "plant_name", "plant/project_name", "unit_name", "name")
+
+def is_brazil(row, cols):
+    return any("brazil" in (row.get(c) or "").strip().lower() for c in cols)
+
+box_xy = ceara["box"]
+BX0 = min(p[0] for p in box_xy); BX1 = max(p[0] for p in box_xy)
+BY0 = min(p[1] for p in box_xy); BY1 = max(p[1] for p in box_xy)
+PAD = 0.04
+
+nat_gen = {"lat": [], "lon": [], "tech": [], "mw": []}
+ce_gen = {"lat": [], "lon": [], "tech": [], "mw": [], "st": [], "nm": []}
+NAT_MIN_MW = 5.0
+
+for fname, tech, capcol, ccols in GEN_FILES:
+    path = f"{UP}/clean_data/energy/{fname}"
+    if not os.path.exists(path):
+        continue
+    with open(path, newline="", encoding="utf-8", errors="ignore") as fh:
+        for row in csv.DictReader(fh):
+            if not is_brazil(row, ccols):
+                continue
+            la, lo = num(row.get("latitude")), num(row.get("longitude"))
+            if la is None or lo is None:
+                continue
+            mw = num(row.get(capcol)) or 0.0
+            status = (row.get("status") or "").strip().lower()
+            if status == "operating" and mw >= NAT_MIN_MW:
+                nat_gen["lat"].append(round(la, 3)); nat_gen["lon"].append(round(lo, 3))
+                nat_gen["tech"].append(tech); nat_gen["mw"].append(round(mw, 1))
+            if BX0 - PAD <= lo <= BX1 + PAD and BY0 - PAD <= la <= BY1 + PAD:
+                nm = ""
+                for c in NAME_COLS:
+                    if row.get(c):
+                        nm = str(row[c])[:44]; break
+                ce_gen["lat"].append(round(la, 5)); ce_gen["lon"].append(round(lo, 5))
+                ce_gen["tech"].append(tech); ce_gen["mw"].append(round(mw, 1))
+                ce_gen["st"].append(status); ce_gen["nm"].append(nm)
+
+national["gen"] = nat_gen
+ceara["gen"] = ce_gen
+print(f"generation: {len(nat_gen['lat'])} national (operating, >={NAT_MIN_MW:.0f} MW), "
+      f"{len(ce_gen['lat'])} in the Ceara box")
+
 payload = {"ceara": ceara, "national": national,
            "meta": {"generated": "2026-09-14", "source": "~/Projects/Brazil"}}
 
