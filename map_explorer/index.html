@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Interactive explorer for the Brazil Sovereign Compute Nexus data-centre siting model.">
+<title>Sovereign Compute Nexus Explorer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+:root{
+  --ground:#f4f6f8; --surface:#ffffff; --panel:#fafbfc; --sunk:#eef1f5;
+  --ink:#11151b; --ink2:#48535f; --muted:#6c7887; --hair:#dde3ea; --hair2:#e9edf2;
+  --accent:#4a3aa7; --accent-soft:#ece9f8; --accent-ink:#4a3aa7;
+  --warn-bg:#fdf4e6; --warn-line:#c98500; --warn-ink:#8a5a00;
+  --map-bg:#f8fafb; --neutral:#d9dee5; --outline:#aab4c0;
+  --shadow:0 1px 2px rgba(17,21,27,.06),0 4px 14px rgba(17,21,27,.05);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ground:#0d1116; --surface:#151a21; --panel:#191f27; --sunk:#10151b;
+    --ink:#e7edf4; --ink2:#b3becb; --muted:#8a96a5; --hair:#242c37; --hair2:#1e252e;
+    --accent:#9085e9; --accent-soft:#252041; --accent-ink:#b4abf2;
+    --warn-bg:#2a2113; --warn-line:#c98500; --warn-ink:#e0a94a;
+    --map-bg:#11161c; --neutral:#2c3540; --outline:#4a5665;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 4px 14px rgba(0,0,0,.3);
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#0d1116; --surface:#151a21; --panel:#191f27; --sunk:#10151b;
+  --ink:#e7edf4; --ink2:#b3becb; --muted:#8a96a5; --hair:#242c37; --hair2:#1e252e;
+  --accent:#9085e9; --accent-soft:#252041; --accent-ink:#b4abf2;
+  --warn-bg:#2a2113; --warn-line:#c98500; --warn-ink:#e0a94a;
+  --map-bg:#11161c; --neutral:#2c3540; --outline:#4a5665;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 4px 14px rgba(0,0,0,.3);
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:"IBM Plex Sans",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:14px; line-height:1.5; -webkit-font-smoothing:antialiased;
+}
+.mono{font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;font-variant-numeric:tabular-nums}
+.eyebrow{
+  font-family:"IBM Plex Sans Condensed","IBM Plex Sans",sans-serif;
+  font-weight:600; font-size:11px; letter-spacing:.09em; text-transform:uppercase; color:var(--muted);
+}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* ---------- shell ---------- */
+.shell{display:flex;flex-direction:column;height:100dvh}
+.topbar{
+  display:flex;align-items:center;gap:18px;flex-wrap:wrap;
+  padding:12px 20px;background:var(--surface);border-bottom:1px solid var(--hair);
+}
+.brand{display:flex;flex-direction:column;gap:1px;margin-right:auto}
+.brand h1{margin:0;font-size:15px;font-weight:600;letter-spacing:-.01em}
+.brand p{margin:0;font-size:11.5px;color:var(--muted)}
+.seg{display:flex;background:var(--sunk);border-radius:7px;padding:3px;gap:2px}
+.seg button{
+  border:0;background:none;padding:6px 14px;border-radius:5px;cursor:pointer;
+  font-size:13px;font-weight:500;color:var(--ink2);
+}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow);font-weight:600}
+.topnote{font-size:11.5px;color:var(--muted);max-width:30ch}
+
+/* ---------- layout ---------- */
+.work{display:grid;grid-template-columns:268px minmax(0,1fr) 312px;gap:1px;background:var(--hair);flex:1;min-height:0;overflow:hidden}
+.rail{background:var(--panel);padding:16px 15px 28px;overflow-y:auto;min-height:0;display:flex;flex-direction:column;gap:20px}
+.stage{background:var(--map-bg);position:relative;min-height:0;display:flex;flex-direction:column}
+
+.group{display:flex;flex-direction:column;gap:9px}
+.group>.eyebrow{margin-bottom:-2px}
+.hint{font-size:11.5px;color:var(--muted);margin:0}
+
+.opt{display:flex;align-items:flex-start;gap:8px;cursor:pointer;padding:4px 6px;border-radius:5px;margin:0 -6px}
+.opt:hover{background:var(--sunk)}
+.opt input{margin:3px 0 0;accent-color:var(--accent);flex:none}
+.opt span{font-size:13px;line-height:1.35}
+.opt small{display:block;color:var(--muted);font-size:11px;line-height:1.35}
+
+.slider{display:flex;flex-direction:column;gap:5px}
+.slider .row{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.slider label{font-size:12.5px;color:var(--ink2)}
+.slider output{font-size:12.5px;font-weight:500}
+.slider input[type=range]{width:100%;accent-color:var(--accent);margin:0}
+
+.callout{
+  background:var(--warn-bg);border-left:3px solid var(--warn-line);
+  padding:9px 11px;border-radius:0 5px 5px 0;font-size:11.5px;line-height:1.45;color:var(--warn-ink);
+}
+.callout b{color:var(--warn-ink)}
+
+.btnrow{display:flex;gap:7px;flex-wrap:wrap}
+.btn{
+  border:1px solid var(--hair);background:var(--surface);color:var(--ink2);
+  padding:5px 10px;border-radius:5px;font-size:12px;cursor:pointer;
+}
+.btn:hover{border-color:var(--outline);color:var(--ink)}
+
+/* ---------- map ---------- */
+.maphead{
+  display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;
+  padding:12px 18px 8px;border-bottom:1px solid var(--hair2);background:var(--surface);
+}
+.maphead h2{margin:0;font-size:14px;font-weight:600}
+.maphead p{margin:0;font-size:12px;color:var(--muted)}
+.mapwrap{position:relative;flex:1;min-height:0}
+svg.map{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:grab;touch-action:none}
+svg.map.drag{cursor:grabbing}
+.zoomer{position:absolute;right:12px;bottom:12px;display:flex;flex-direction:column;gap:4px}
+.zoomer button{
+  width:30px;height:30px;border-radius:6px;border:1px solid var(--hair);
+  background:var(--surface);color:var(--ink2);cursor:pointer;font-size:15px;line-height:1;box-shadow:var(--shadow);
+}
+.zoomer button:hover{color:var(--ink);border-color:var(--outline)}
+.tip{
+  position:absolute;pointer-events:none;z-index:5;background:var(--surface);
+  border:1px solid var(--hair);border-radius:6px;box-shadow:var(--shadow);
+  padding:7px 9px;font-size:12px;max-width:240px;opacity:0;transition:opacity .09s;
+}
+.tip.on{opacity:1}
+.tip b{display:block;font-size:12.5px;margin-bottom:2px}
+.tip .k{color:var(--muted)}
+
+/* ---------- right rail ---------- */
+.counts{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--hair);border:1px solid var(--hair);border-radius:7px;overflow:hidden}
+.count{background:var(--surface);padding:9px 11px}
+.count .v{font-size:19px;font-weight:600;letter-spacing:-.02em;display:block}
+.count .l{font-size:10.5px;color:var(--muted);line-height:1.3;display:block;margin-top:1px}
+
+.legend{display:flex;flex-direction:column;gap:6px}
+.lg{display:flex;align-items:center;gap:8px;font-size:12px}
+.sw{width:13px;height:13px;border-radius:3px;flex:none;border:1px solid rgba(0,0,0,.08)}
+.ramp{height:9px;border-radius:3px;margin:2px 0 1px}
+.rampax{display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted)}
+
+.record{background:var(--surface);border:1px solid var(--hair);border-radius:7px;overflow:hidden}
+.record .rh{padding:10px 12px;border-bottom:1px solid var(--hair2)}
+.record .rh .t{font-size:13px;font-weight:600}
+.record .rh .s{font-size:11px;color:var(--muted)}
+.record dl{margin:0;padding:4px 12px 11px}
+.record .kv{display:flex;justify-content:space-between;gap:10px;padding:4px 0;border-bottom:1px solid var(--hair2);font-size:12px}
+.record .kv:last-child{border-bottom:0}
+.record dt{color:var(--muted);flex:none}
+.record dd{margin:0;text-align:right}
+.record .sec{padding:8px 12px 2px}
+.pill{display:inline-block;padding:1px 7px;border-radius:20px;font-size:11px;font-weight:500;border:1px solid transparent}
+.empty{color:var(--muted);font-size:12px;padding:14px 12px;text-align:center}
+
+.foot{padding:12px 20px;border-top:1px solid var(--hair);background:var(--surface);font-size:11.5px;color:var(--muted)}
+.foot a{color:var(--accent-ink)}
+
+@media (max-width:1080px){
+  .shell{height:auto;min-height:100dvh}
+  .work{grid-template-columns:1fr;gap:0;overflow:visible}
+  .rail{border-bottom:1px solid var(--hair);overflow:visible}
+  .stage{height:68vh;min-height:420px;border-bottom:1px solid var(--hair)}
+  .mapwrap{min-height:340px}
+}
+@media (max-width:520px){
+  .topbar{padding:10px 16px;gap:12px}
+  .rail{padding:14px 16px 24px}
+  .maphead{padding:10px 16px 8px}
+}
+</style>
+<style>
+html{color-scheme:light dark}
+body{margin:0;font-size:14px}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+
+
+<div class="shell">
+  <header class="topbar">
+    <div class="brand">
+      <h1>Sovereign Compute Nexus Explorer</h1>
+      <p>Brazil data-centre siting under grid, land and policy constraints</p>
+    </div>
+    <div class="seg" role="group" aria-label="View">
+      <button id="viewCeara" aria-pressed="true">Ceará case study</button>
+      <button id="viewBrazil" aria-pressed="false">Brazil overview</button>
+    </div>
+    <p class="topnote" id="topnote">2,808 H3 cells · 50 km × 50 km box</p>
+  </header>
+
+  <div class="work">
+    <aside class="rail left" id="railLeft"></aside>
+
+    <section class="stage">
+      <div class="maphead">
+        <h2 id="mapTitle">Ceará case study</h2>
+        <p id="mapSub">Drag to pan · scroll to zoom · click a cell for its record</p>
+      </div>
+      <div class="mapwrap" id="mapwrap">
+        <svg class="map" id="svg" role="img" aria-label="Map"></svg>
+        <div class="tip" id="tip" aria-hidden="true"></div>
+        <div class="zoomer">
+          <button id="zin" title="Zoom in" aria-label="Zoom in">+</button>
+          <button id="zout" title="Zoom out" aria-label="Zoom out">−</button>
+          <button id="zres" title="Reset view" aria-label="Reset view">⤢</button>
+        </div>
+      </div>
+    </section>
+
+    <aside class="rail right" id="railRight"></aside>
+  </div>
+
+  <footer class="foot">
+    Built from the phase outputs in <span class="mono">~/Projects/Brazil</span> on 14 September 2026 · ONS Dados Abertos, geobr/IPEA, PeeringDB &amp; OpenStreetMap, MapBiomas, Copernicus Sentinel-1/2 via Google Earth Engine.
+  </footer>
+</div>
+
+
+
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

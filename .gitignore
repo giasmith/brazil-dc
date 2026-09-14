@@ -1,0 +1,34 @@
+# ---------------------------------------------------------------- derived data
+# Everything here is rebuilt by the scripts in scripts/, in the order the
+# README lists. Kept out of git because it runs to several gigabytes.
+/clean_data/
+/data/
+
+# ------------------------------------------------------------ source material
+# Third-party PDFs. Licensing varies and they are not ours to redistribute;
+# every one of them is cited in docs/phase3_redata_policy_corpus.md.
+/papers/
+/gov_docs/
+
+# ----------------------------------------------------------------- notebooks
+# preprocessing.ipynb carries ~92 MB of embedded output. Strip outputs before
+# tracking it:  jupyter nbconvert --clear-output --inplace preprocessing.ipynb
+/preprocessing.ipynb
+
+# --------------------------------------------------------------- environment
+.venv/
+.env
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+
+# -------------------------------------------------------------------- system
+.DS_Store
+Thumbs.db
+
+# NOTE: map_explorer/data/ and map_explorer/data.js are deliberately tracked --
+# GitHub Pages serves them, and they are only ~1.4 MB. Regenerate them with
+# `python3 map_explorer/build_data.py`.
+
+# Archived nested git repo from the standalone map_explorer checkout (2026-09-14).
+/_archive/
