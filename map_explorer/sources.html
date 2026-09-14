@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Every dataset behind the Brazil Sovereign Compute Nexus model: provider, contents, how it was acquired, what it is used for, license, and citation.">
+<title>Data &amp; Sources · Sovereign Compute Nexus</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --ground:#f4f6f8; --surface:#ffffff; --panel:#fafbfc; --sunk:#eef1f5;
+  --ink:#11151b; --ink2:#48535f; --muted:#6c7887; --hair:#dde3ea; --hair2:#e9edf2;
+  --accent:#4a3aa7; --accent-soft:#ece9f8; --accent-ink:#4a3aa7;
+  --warn-bg:#fdf4e6; --warn-line:#c98500; --warn-ink:#8a5a00;
+  --ok:#0ca30c;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ground:#0d1116; --surface:#151a21; --panel:#191f27; --sunk:#10151b;
+    --ink:#e7edf4; --ink2:#b3becb; --muted:#8a96a5; --hair:#242c37; --hair2:#1e252e;
+    --accent:#9085e9; --accent-soft:#252041; --accent-ink:#b4abf2;
+    --warn-bg:#2a2113; --warn-line:#c98500; --warn-ink:#e0a94a;
+    --ok:#3ccf5a;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#0d1116; --surface:#151a21; --panel:#191f27; --sunk:#10151b;
+  --ink:#e7edf4; --ink2:#b3becb; --muted:#8a96a5; --hair:#242c37; --hair2:#1e252e;
+  --accent:#9085e9; --accent-soft:#252041; --accent-ink:#b4abf2;
+  --warn-bg:#2a2113; --warn-line:#c98500; --warn-ink:#e0a94a;
+  --ok:#3ccf5a;
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{margin:0;background:var(--ground);color:var(--ink);font:14px/1.55 "IBM Plex Sans",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+a{color:var(--accent-ink)}
+.mono{font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;font-variant-numeric:tabular-nums}
+.eyebrow{font-family:"IBM Plex Sans Condensed","IBM Plex Sans",sans-serif;font-weight:600;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+
+.topbar{display:flex;align-items:center;gap:18px;flex-wrap:wrap;padding:12px 20px;background:var(--surface);border-bottom:1px solid var(--hair);position:sticky;top:0;z-index:3}
+.brand{display:flex;flex-direction:column;gap:1px;margin-right:auto}
+.brand h1{margin:0;font-size:15px;font-weight:600;letter-spacing:-.01em}
+.brand p{margin:0;font-size:11.5px;color:var(--muted)}
+.back{font-size:13px;font-weight:500;text-decoration:none;padding:6px 12px;border:1px solid var(--hair);border-radius:6px;color:var(--ink2);background:var(--surface)}
+.back:hover{border-color:var(--accent);color:var(--accent-ink)}
+
+.wrap{max-width:960px;margin:0 auto;padding:28px 20px 64px}
+.lede{max-width:70ch;font-size:15px;color:var(--ink2);margin:0 0 22px}
+.lede b{color:var(--ink)}
+
+nav.toc{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12.5px;margin:0 0 30px;padding:12px 14px;background:var(--panel);border:1px solid var(--hair);border-radius:8px}
+nav.toc a{text-decoration:none;color:var(--ink2)}
+nav.toc a:hover{color:var(--accent-ink)}
+
+section.group{margin:0 0 34px}
+section.group>h2{font-size:13px;font-weight:600;margin:0 0 4px;padding-bottom:8px;border-bottom:2px solid var(--hair);display:flex;align-items:baseline;gap:10px}
+section.group>h2 .eyebrow{font-size:10.5px}
+section.group>p.why{margin:10px 0 16px;color:var(--ink2);max-width:72ch;font-size:13.5px}
+
+.ds{background:var(--surface);border:1px solid var(--hair);border-radius:8px;margin:0 0 12px;overflow:hidden}
+.ds>header{padding:12px 16px 10px;border-bottom:1px solid var(--hair2);display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.ds>header h3{margin:0;font-size:14.5px;font-weight:600}
+.ds>header .prov{color:var(--muted);font-size:12.5px}
+.ds>header .lic{margin-left:auto;font-size:11px;font-weight:500;padding:2px 8px;border-radius:20px;background:var(--accent-soft);color:var(--accent-ink);white-space:nowrap}
+.ds>header .lic.verify{background:var(--warn-bg);color:var(--warn-ink)}
+.ds dl{margin:0;padding:6px 16px 12px;display:grid;grid-template-columns:150px minmax(0,1fr);gap:0 16px}
+.ds dt{color:var(--muted);font-size:12px;padding:6px 0;border-bottom:1px solid var(--hair2)}
+.ds dd{margin:0;font-size:13px;padding:6px 0;border-bottom:1px solid var(--hair2);min-width:0}
+.ds dt:last-of-type,.ds dd:last-of-type{border-bottom:0}
+.ds dd .mono{font-size:12px}
+.ds dd ul{margin:2px 0 0;padding-left:18px}
+.ds dd li{margin:1px 0}
+.cite{font-size:12.5px;color:var(--ink2);background:var(--sunk);padding:7px 10px;border-radius:5px;border-left:3px solid var(--hair)}
+.num{font-variant-numeric:tabular-nums}
+
+.issue{background:var(--warn-bg);border-left:3px solid var(--warn-line);border-radius:0 6px 6px 0;padding:10px 14px;margin:0 0 10px;font-size:13px;color:var(--warn-ink)}
+.issue b{display:block;margin-bottom:2px}
+.issue.fixed{background:var(--sunk);border-left-color:var(--ok);color:var(--ink2)}
+
+.citebox{background:var(--surface);border:1px solid var(--hair);border-radius:8px;padding:14px 16px}
+.citebox pre{margin:8px 0 0;white-space:pre-wrap;font-size:12px;background:var(--sunk);padding:10px 12px;border-radius:5px;color:var(--ink)}
+
+footer{margin-top:40px;padding-top:14px;border-top:1px solid var(--hair);font-size:11.5px;color:var(--muted)}
+@media (max-width:640px){
+  .ds dl{grid-template-columns:1fr}
+  .ds dt{padding-bottom:0;border-bottom:0}
+  .ds dd{padding-top:2px}
+  .ds>header .lic{margin-left:0}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <h1>Data &amp; Sources</h1>
+    <p>Every dataset behind the Sovereign Compute Nexus model, with provenance, license, and citation</p>
+  </div>
+  <a class="back" href="index.html">← Back to the explorer</a>
+</header>
+
+<main class="wrap">
+
+<p class="lede">The model joins <b>thirteen datasets</b> onto a single H3 decision grid. Ten come from outside — government agencies, satellites, and open databases — and three are built inside the workspace from the others. This page records where each one came from, how it was acquired, what it contributes, and the terms it is used under. Everything here is reproducible from the scripts in the <a href="https://github.com/giasmith/brazil-dc">brazil-dc repository</a>.</p>
+
+<nav class="toc" aria-label="Sections">
+  <a href="#territory">Territory &amp; law</a>
+  <a href="#energy">Energy &amp; grid</a>
+  <a href="#datacenters">Data-center geography</a>
+  <a href="#land">Land &amp; water</a>
+  <a href="#satellite">Satellite</a>
+  <a href="#policy">Policy corpus</a>
+  <a href="#derived">Derived layers</a>
+  <a href="#issues">Known issues</a>
+  <a href="#cite">Cite this project</a>
+</nav>
+
+<!-- =============================================================== -->
+<section class="group" id="territory">
+  <h2>Territory &amp; law <span class="eyebrow">Social impact</span></h2>
+  <p class="why">The legal map. Protected areas, indigenous territories, and state boundaries are treated as hard exclusions: a cell that overlaps one is out before any objective is scored.</p>
+
+  <article class="ds">
+    <header>
+      <h3>Brazilian territorial layers</h3>
+      <span class="prov">IBGE · MMA · FUNAI, packaged by IPEA's geobr project</span>
+      <span class="lic">Public data via geobr (MIT)</span>
+    </header>
+    <dl>
+      <dt>What it is</dt><dd>Four simplified boundary layers: <span class="num">27</span> states, <span class="num">5,573</span> municipalities (2025), <span class="num">3,001</span> conservation units (March 2025), and <span class="num">637</span> indigenous lands (2025). EPSG:4326.</dd>
+      <dt>Acquired via</dt><dd>Parquet files from the geobr prepared-data releases (<span class="mono">github.com/ipea/geobr_prep_data</span>, v2.0.0), merged into one GeoPackage in a section of <span class="mono">preprocessing.ipynb</span>.</dd>
+      <dt>Output</dt><dd><span class="mono">clean_data/brazil_territorial_layers.gpkg</span> · <span class="mono">brazil_territorial_layers_metadata.json</span></dd>
+      <dt>Used for</dt><dd>Phase 1 hard exclusions (protected overlap, indigenous overlap, outside-state cells); Phase 3 boundary-review buffer (2.5 km); state polygons and overlays on both maps.</dd>
+      <dt>Citation</dt><dd class="cite">Pereira, R. H. M. &amp; Gonçalves, C. N. (2019). geobr: Loads shapefiles of official spatial data sets of Brazil. IPEA. Underlying boundaries © IBGE; conservation units © MMA/CNUC; indigenous lands © FUNAI.</dd>
+    </dl>
+  </article>
+</section>
+
+<!-- =============================================================== -->
+<section class="group" id="energy">
+  <h2>Energy &amp; grid <span class="eyebrow">Energy</span></h2>
+  <p class="why">Where the power is, where it is being wasted, and what the wires can carry.</p>
+
+  <article class="ds">
+    <header>
+      <h3>Official ONS grid topology and generation</h3>
+      <span class="prov">Operador Nacional do Sistema Elétrico (ONS), Dados Abertos</span>
+      <span class="lic verify">Open data portal · verify terms</span>
+    </header>
+    <dl>
+      <dt>What it is</dt><dd>Brazil's real transmission network as published by the grid operator: substations, lines, installed capacity, generation, load and energy balance. <span class="num">1,705</span> buses, <span class="num">1,838</span> active branches, <span class="num">4,626</span> generating units, <span class="num">198,138</span> MW installed.</dd>
+      <dt>Acquired via</dt><dd>Direct pulls from the ONS open-data bucket (<span class="mono">ons-aws-prod-opendata.s3.amazonaws.com</span>). Thirteen dataset folders under <span class="mono">data/ons/</span>: <span class="mono">subestacao</span>, <span class="mono">linha_transmissao</span>, <span class="mono">capacidade-geracao</span>, <span class="mono">geracao_usina_2_ho</span>, <span class="mono">carga_energia_di</span>, <span class="mono">balanco_energia_subsistema_ho</span>, <span class="mono">usina_conjunto</span>, <span class="mono">usina_pqu</span>, <span class="mono">modalidade_usina</span>, and the four <span class="mono">restricao_coff_*</span> folders below. Built by <span class="mono">scripts/build_ons_official_grid.py</span>.</dd>
+      <dt>Output</dt><dd><span class="mono">clean_data/ons_official_grid/</span> — GeoPackage model, bus and branch CSVs, generation assignments, ONS-vs-GEM energy mix.</dd>
+      <dt>Used for</dt><dd>The authoritative topology. Every distance-to-substation and distance-to-line constraint in Phase 4 is measured against it. DC power-flow approximation, not AC optimal power flow.</dd>
+      <dt>Citation</dt><dd class="cite">ONS — Operador Nacional do Sistema Elétrico. Dados Abertos. <span class="mono">dados.ons.org.br</span>. Retrieved May 2026.</dd>
+    </dl>
+  </article>
+
+  <article class="ds">
+    <header>
+      <h3>ONS renewable curtailment records</h3>
+      <span class="prov">ONS, Dados Abertos — restrição de operação por constrained-off</span>
+      <span class="lic verify">Open data portal · verify terms</span>
+    </header>
+    <dl>
+      <dt>What it is</dt><dd>Two resolutions. <b>Aggregate</b>: monthly constrained-off files for wind and solar, <span class="num">82</span> files covering October 2021 – May 2026; <span class="num">502.3</span> TWh generated, <span class="num">63.5</span> TWh curtailed (<span class="num">11.2</span>% of potential). <b>Detail</b>: half-hourly plant and conjunto files with estimated vs. verified generation and weather fields; <span class="num">91,985,149</span> rows across <span class="num">1,593</span> plant IDs.</dd>
+      <dt>Acquired via</dt><dd><span class="mono">restricao_coff_eolica_tm</span>, <span class="mono">restricao_coff_fotovoltaica_tm</span> and their <span class="mono">_detail_tm</span> counterparts. Processed by <span class="mono">scripts/analyze_ons_curtailment_history.py</span> and <span class="mono">analyze_ons_curtailment_detail.py</span>.</dd>
+      <dt>Output</dt><dd><span class="mono">clean_data/ons_curtailment_history/</span> · <span class="mono">clean_data/ons_curtailment_detail/</span></dd>
+      <dt>Used for</dt><dd>Evidence that transmission scarcity is real and priced; state-level curtailment totals feed the curtailment-opportunity objective in Phase 4 and the Brazil overview map.</dd>
+      <dt>Citation</dt><dd class="cite">ONS. Restrição de Operação por Constrained-off de Usinas Eólicas e Fotovoltaicas. Dados Abertos. Retrieved May 2026.</dd>
+    </dl>
+  </article>
+
+  <article class="ds">
+    <header>
+      <h3>Energy asset inventory (GEM-style tracker)</h3>
+      <span class="prov">Global Energy Monitor–style Portal Energético Tracker workbook</span>
+      <span class="lic">CC BY 4.0 (GEM trackers)</span>
+    </header>
+    <dl>
+      <dt>What it is</dt><dd>Project-level records for solar, wind, hydropower, bioenergy, oil &amp; gas, coal, nuclear and geothermal plants, plus pipelines, terminals and extraction fields. Workbook dated 2026-03-24: <span class="num">34</span> sheets, <span class="num">19</span> with data, <span class="num">22,323</span> rows, <span class="num">49</span> empty columns dropped, no rows lost. <b>Coverage is Latin America–wide</b>; every script filters to Brazil on the country column.</dd>
+      <dt>Acquired via</dt><dd>Workbook held in OneDrive; cleaned into 19 CSVs by the original notebook pipeline.</dd>
+      <dt>Output</dt><dd><span class="mono">clean_data/energy/*.csv</span> · <span class="mono">cleaning_report.json</span></dd>
+      <dt>Used for</dt><dd>Nearby-renewable capacity per cell; the proposed-generation stress scenario; the "Power plants" layer on both maps (<span class="num">2,523</span> operating, <span class="num">172</span> under construction, <span class="num">3,376</span> planned at 5 MW and up). Also the input to the GEM-style reference grid below.</dd>
+      <dt>Citation</dt><dd class="cite">Global Energy Monitor. Global Solar, Wind, Hydropower, Bioenergy, Oil &amp; Gas, Coal, Nuclear and Geothermal Power Trackers. Data released under CC BY 4.0; cite the tracker and release date used.</dd>
+    </dl>
+  </article>
+</section>
+
+<!-- =============================================================== -->
+<section class="group" id="datacenters">
+  <h2>Data-center geography <span class="eyebrow">Land</span></h2>
+  <p class="why">Where compute already sits. The model uses these points as fiber and interconnection anchors; the curated list adds status, capacity and cooling detail.</p>
+
+  <article class="ds">
+    <header>
+      <h3>OpenStreetMap data-center features</h3>
+      <span class="prov">OpenStreetMap contributors, via the Overpass API</span>
+      <span class="lic">ODbL 1.0</span>
+    </header>
+    <dl>
+      <dt>What it is</dt><dd>Elements in Brazil tagged <span class="mono">telecom=data_center</span> or <span class="mono">telecom=data_centre</span>: <span class="num">57</span> strictly tagged features.</dd>
+      <dt>Acquired via</dt><dd><span class="mono">scripts/download_osm_brazil_data_centers.py</span> against <span class="mono">overpass-api.de</span> and mirrors.</dd>
+      <dt>Output</dt><dd><span class="mono">clean_data/osm_data_centers/</span></dd>
+      <dt>Used for</dt><dd>The tag-pure, conservative layer; merged with PeeringDB into the 336-point anchor set.</dd>
+      <dt>Citation</dt><dd class="cite">© OpenStreetMap contributors. Data available under the Open Database License (ODbL) 1.0. <span class="mono">openstreetmap.org/copyright</span></dd>
+    </dl>
+  </article>
+
+  <article class="ds">
+    <header>
+      <h3>PeeringDB facilities</h3>
+      <span class="prov">PeeringDB public facility API</span>
+      <span class="lic verify">Public API · verify data terms</span>
+    </header>
+    <dl>
+      <dt>What it is</dt><dd><span class="num">302</span> Brazilian interconnection facilities with coordinates, network counts and IX counts; merged with the OSM-only points above into <span class="num">336</span> unique locations.</dd>
+      <dt>Acquired via</dt><dd><span class="mono">scripts/download_brazil_idc_points.py</span> — <span class="mono">peeringdb.com/api/fac?country=BR</span> plus the public KMZ coordinate file.</dd>
+      <dt>Output</dt><dd><span class="mono">clean_data/idc_data_centers/</span></dd>
+      <dt>Used for</dt><dd>The "fiber anchor" the model measures distance to: within 50 km is a hard constraint in Phase 4, and proximity is a minimized objective. Records are user-maintained; validate before site-specific claims.</dd>
+      <dt>Citation</dt><dd class="cite">PeeringDB. Facility records for Brazil. <span class="mono">peeringdb.com</span>. Retrieved May 2026.</dd>
+    </dl>
+  </article>
+
+  <article class="ds">
+    <header>
+      <h3>Curated Brazilian data-center list</h3>
+      <span class="prov">Compiled for this project from operator pages and industry press</span>
+      <span class="lic">Project compilation · sources per row</span>
+    </header>
+    <dl>
+      <dt>What it is</dt><dd><span class="num">110</span> facilities with operator, location, status, capacity (MW), cooling and metrics notes, and a documentation link per row. <span class="num">93</span> commissioned, <span class="num">2</span> under construction, <span class="num">14</span> planned; capacity known for <span class="num">96</span>, "undisclosed" for 13, "100+" for one.</dd>
+      <dt>File</dt><dd><span class="mono">map_explorer/data/brazilian_data_centers.csv</span></dd>
+      <dt>Placement</dt><dd><span class="num">60</span> rows carry exact coordinates. <span class="num">43</span> name only a city and sit at the centroid of that city's located rows; <span class="num">6</span> name only a state and sit at the state capital. Each record shows its precision. One row (V.tal Barranquilla, Colombia) is outside Brazil and is not mapped.</dd>
+      <dt>Used for</dt><dd>The "Data centers — curated" layer: status flags, capacity-sized markers, and the facility record panel. Not used by the siting model itself.</dd>
+      <dt>Citation</dt><dd class="cite">Each row cites its own source URL in the Official Documentation column. Treat capacities and cooling notes as operator-reported.</dd>
+    </dl>
+  </article>
+</section>
+
+<!-- =============================================================== -->
+<section class="group" id="land">
+  <h2>Land &amp; water <span class="eyebrow">Land</span></h2>
+  <p class="why">What is on the ground, and where the water is.</p>
+
+  <article class="ds">
+    <header>
+      <h3>Land cover and surface water rasters</h3>
+      <span class="prov">MapBiomas Brazil (class-code family), 30 m, 2024</span>
+      <span class="lic">CC BY 4.0 · citation required</span>
+    </header>
+    <dl>
+      <dt>What it is</dt><dd>A 30-meter land-cover raster for 2024 (forest, savanna, pasture, urban and 26 other classes — 30-class legend) and a 2024 surface-water raster. BigTIFF, EPSG:4326.</dd>
+      <dt>Acquired via</dt><dd>Downloaded from MapBiomas and held in OneDrive; mounted in place as GDAL VRT mosaics by <span class="mono">scripts/load_lulc_water_layers.py</span>. The land-cover source file is still the browser partial-download (<span class="mono">Unconfirmed 614937.crdownload</span>) — readable, but replace before publication.</dd>
+      <dt>Output</dt><dd><span class="mono">clean_data/lulc_water/</span> — VRTs, class legend, per-state area summaries.</dd>
+      <dt>Used for</dt><dd>Land-cover vulnerability in the Phase 2 proxy; surface water as a hard exclusion; dominant class per cell (centroid sample). State summaries use a downsampled grid.</dd>
+      <dt>Citation</dt><dd class="cite">MapBiomas Project. Collection of Annual Land Use and Land Cover Maps of Brazil, 2024. <span class="mono">mapbiomas.org</span>. Licensed CC BY 4.0; cite the collection number of the file used.</dd>
+    </dl>
+  </article>
+</section>
+
+<!-- =============================================================== -->
+<section class="group" id="satellite">
+  <h2>Satellite <span class="eyebrow">Remote sensing</span></h2>
+  <p class="why">The real measurement behind the degradation risk score.</p>
+
+  <article class="ds">
+    <header>
+      <h3>Sentinel-2 optical and Sentinel-1 radar composites</h3>
+      <span class="prov">ESA Copernicus, accessed through Google Earth Engine</span>
+      <span class="lic">Copernicus free, full and open</span>
+    </header>
+    <dl>
+      <dt>What it is</dt><dd><b>Sentinel-2</b> (<span class="mono">COPERNICUS/S2_SR_HARMONIZED</span>): bands B2, B3, B4, B8, B11, B12 plus NDVI, NDWI and NBR, cast to Float32. <b>Sentinel-1</b> (<span class="mono">COPERNICUS/S1_GRD</span>): VV, VH, VV−VH and VV/VH. Both at 10 m, quarterly composites, 2021-10-01 to 2026-05-01, clipped to the 50 km × 50 km Ceará box.</dd>
+      <dt>Acquired via</dt><dd>Export tasks submitted under Earth Engine project <span class="mono">edwc-483823</span> by <span class="mono">scripts/request_sentinel_gee_exports.py</span> (Python) and <span class="mono">gee/request_sentinel_ceara_exports.js</span> (Code Editor); <span class="num">38</span> tasks to Google Drive. Zonal means per H3 cell computed in Colab against the Drive-mounted GeoTIFFs. The feature table is <span class="mono">phase2_rs_features_for_solver.csv</span>.</dd>
+      <dt>Output</dt><dd>Per-cell NDVI, NDWI, VV, VH for all <span class="num">2,808</span> cells → <span class="mono">clean_data/sovereign_compute_nexus/phase2_rs/</span></dd>
+      <dt>Used for</dt><dd>Phase 2 degradation probability <span class="mono">P<sub>deg</sub></span>: low NDVI as vegetation stress, high NDWI as wetness sensitivity, VV/VH as radar pressure. Replaces the earlier PCA reconstruction-error proxy, which is retained as a fallback.</dd>
+      <dt>Citation</dt><dd class="cite">Contains modified Copernicus Sentinel data (2021–2026), processed by ESA. Accessed via Google Earth Engine — Gorelick, N., et al. (2017). Google Earth Engine: Planetary-scale geospatial analysis for everyone. <i>Remote Sensing of Environment</i>, 202, 18–27.</dd>
+    </dl>
+  </article>
+</section>
+
+<!-- =============================================================== -->
+<section class="group" id="policy">
+  <h2>Policy corpus <span class="eyebrow">Policy</span></h2>
+  <p class="why">The rules the model has to obey, turned into bounded categories it cannot invent values for.</p>
+
+  <article class="ds">
+    <header>
+      <h3>ReData and land-protection policy corpus</h3>
+      <span class="prov">Brazilian federal government sources and peer-reviewed literature, curated</span>
+      <span class="lic">Public documents · articles by DOI</span>
+    </header>
+    <dl>
+      <dt>What it is</dt><dd><span class="num">36</span> documents: <span class="num">12</span> government sources on ReData, data-center incentives and digital infrastructure (Planalto, Senado, Câmara, Receita Federal, Fazenda, MDIC, MME, MMA, Anatel); <span class="num">15</span> on indigenous rights, consultation duties, protected areas and environmental licensing (Constitution arts. 225 and 231, Lei 6.001/1973, Decreto 1.775/1996, Lei 14.701/2023, Decreto 10.088/2019 on ILO 169, Lei 9.985/2000 SNUC, CONAMA 428/2010, Lei 6.938/1981, LC 140/2011, FUNAI guidance); and <span class="num">9</span> peer-reviewed articles on indigenous lands and protected areas as conservation regimes.</dd>
+      <dt>File</dt><dd><span class="mono">docs/phase3_redata_policy_corpus.md</span> and <span class="mono">.json</span> — each entry carries issuer, date, URL or DOI, and its role in Phase 3.</dd>
+      <dt>Used for</dt><dd>Phase 3 bounded classifier: which legal conditions trigger a hard exclusion, a 2.5 km human-review buffer, or a stringency weight of 1, 5 or 100. Deterministic rules, not a language model.</dd>
+      <dt>Citation</dt><dd class="cite">Cite individual documents from the corpus file. Journal entries were identified from publisher and DOI records and should be re-verified against full text before publication.</dd>
+    </dl>
+  </article>
+</section>
+
+<!-- =============================================================== -->
+<section class="group" id="derived">
+  <h2>Derived layers <span class="eyebrow">Built in the workspace</span></h2>
+  <p class="why">Three layers are computed from the sources above rather than pulled from outside.</p>
+
+  <article class="ds">
+    <header><h3>GEM-style reference grid</h3><span class="prov">Derived from the energy asset inventory</span><span class="lic">Project output</span></header>
+    <dl>
+      <dt>What it is</dt><dd>A DC power-flow topology inferred from generator geography by Delaunay triangulation and nearest-neighbor linking: <span class="num">232</span> buses, <span class="num">826</span> branches, <span class="num">6,238</span> generators, <span class="num">229,698</span> MW.</dd>
+      <dt>Built by</dt><dd><span class="mono">scripts/build_brazil_power_grid.py</span> → <span class="mono">clean_data/power_grid/</span></dd>
+      <dt>Used for</dt><dd>Cross-checking coverage against ONS only. Never used for siting constraints.</dd>
+    </dl>
+  </article>
+
+  <article class="ds">
+    <header><h3>Proposed-generation stress scenario</h3><span class="prov">Energy inventory placed on the ONS topology</span><span class="lic">Project output</span></header>
+    <dl>
+      <dt>What it is</dt><dd><span class="num">3,552</span> proposed plants (<span class="num">463,005</span> MW) added to today's grid with transmission held fixed: overloaded branches rise from 1 to <span class="num">236</span>, branches above 75% from 9 to <span class="num">335</span>.</dd>
+      <dt>Built by</dt><dd><span class="mono">scripts/overlay_gem_proposed_on_ons.py</span> → <span class="mono">clean_data/gem_proposed_overlay/</span></dd>
+      <dt>Used for</dt><dd>A stress proxy showing that siting compute near curtailed generation is a wires problem. Not a dispatch forecast.</dd>
+    </dl>
+  </article>
+
+  <article class="ds">
+    <header><h3>State suitability screen and H3 case-study grid</h3><span class="prov">All layers combined</span><span class="lic">Project output</span></header>
+    <dl>
+      <dt>What it is</dt><dd>A 27-state screening score weighted on market/interconnect (0.30), grid access (0.20), clean power (0.20), transmission headroom (0.15) and biome (0.15); and the <span class="num">2,808</span>-cell H3 resolution-8 grid over a 50 km × 50 km box centered at −3.56, −38.82 in coastal Ceará, onto which every layer is joined.</dd>
+      <dt>Built by</dt><dd><span class="mono">scripts/build_integrated_dc_investment_overlay.py</span>, <span class="mono">build_phase1_h3_baseline.py</span>, and the Phase 2–4 scripts → <span class="mono">clean_data/integrated_dc_investment/</span>, <span class="mono">clean_data/sovereign_compute_nexus/</span></dd>
+      <dt>Used for</dt><dd>The Brazil overview map and the entire Ceará case study. H3 indexing by Uber's H3 library.</dd>
+      <dt>Citation</dt><dd class="cite">Uber Technologies. H3: Hexagonal hierarchical geospatial indexing system. Apache 2.0. <span class="mono">h3geo.org</span></dd>
+    </dl>
+  </article>
+</section>
+
+<!-- =============================================================== -->
+<section class="group" id="issues">
+  <h2>Known issues <span class="eyebrow">Read before citing a number</span></h2>
+  <p class="why">Found while re-deriving every figure from the source files. Each is documented in the advisor memo; none has been silently corrected.</p>
+
+  <div class="issue"><b>Zero-distance bug in Phase 4.</b> <span class="mono">float(row.get(field, np.inf) or np.inf)</span> reads a distance of exactly 0 km as infinite, so 147 cells sitting directly on a transmission line were excluded for being too far from one. Correcting it raises the feasible set from 819 to 966 and promotes a cell scoring 74.33, above the current top recommendation of 73.52. The explorer defaults to the published run and offers a "Fix the 0 km bug" toggle.</div>
+  <div class="issue"><b>One Phase 4 objective does no work.</b> <span class="mono">objective_curtailment_shortfall</span> is identically 0 across all 819 feasible cells, because curtailment enters only at state resolution and the whole box is in Ceará. The frontier is effectively a five-objective sort.</div>
+  <div class="issue"><b>Degradation probability is clipped at 0.90.</b> 355 cells (12.6%) sit exactly at the ceiling; ranking information in the high-risk tail is lost.</div>
+  <div class="issue"><b>Water share is binary.</b> <span class="mono">water_surface_share_proxy</span> takes only 0 and 1 — a centroid hit test, not an areal share — and drives a hard exclusion on 64 cells.</div>
+  <div class="issue"><b>Sentinel ingest log points at the wrong Drive folder.</b> The log reports 0 of 38 exports found while the export symlink and the solver features show otherwise; the repository cannot presently state which composites produced the features.</div>
+  <div class="issue"><b>Land-cover raster is a partial download.</b> The file still carries a <span class="mono">.crdownload</span> suffix. It is readable, but replace it with the completed MapBiomas file before publication-grade zonal statistics.</div>
+  <div class="issue"><b>Curated data-center list: 50 of 110 rows have no coordinates.</b> The gaps fall disproportionately on the hyperscalers and government facilities. Those rows are placed at city or state centroids and flagged as approximate on the map.</div>
+  <div class="issue fixed"><b>Resolved.</b> The energy-inventory tables are Latin America–wide; the pipeline scripts already filter to Brazil, and the map layers now do too. Two README figures (22,874 → 22,323 rows; 15/12 → 12/15 corpus split) were transposed and are corrected in the repository README.</div>
+</section>
+
+<!-- =============================================================== -->
+<section class="group" id="cite">
+  <h2>Cite this project</h2>
+  <div class="citebox">
+    <div class="eyebrow">Suggested citation</div>
+    <pre>Smith, G. (2026). Sovereign Compute Nexus: a constraint-first siting model for data centers in Brazil
+[Software and data]. GitHub. https://github.com/giasmith/brazil-dc</pre>
+    <p style="margin:12px 0 0;font-size:12.5px;color:var(--ink2)">When citing a result, name the evidence level it rests on: official ONS topology, GEM cross-check, PeeringDB/OSM facility proxy, MapBiomas candidate raster, Sentinel-derived features, or the bounded policy classifier. The <a href="https://github.com/giasmith/brazil-dc/blob/main/README.md">README</a> carries the full stage-by-stage record and the scripts in execution order.</p>
+  </div>
+</section>
+
+<footer>
+  Sovereign Compute Nexus · Data &amp; Sources · generated September 14, 2026 from <span class="mono">~/Projects/Brazil</span>. License tags marked "verify terms" reflect that the provider publishes the data openly but this page has not confirmed the exact license text; check before redistribution.
+</footer>
+
+</main>
+</body>
+</html>

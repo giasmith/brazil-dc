@@ -71,6 +71,11 @@ button,input,select{font:inherit;color:inherit}
 }
 .seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow);font-weight:600}
 .topnote{font-size:11.5px;color:var(--muted);max-width:30ch}
+.toplink{
+  font-size:12px;font-weight:500;color:var(--accent-ink);text-decoration:none;
+  border:1px solid var(--hair);background:var(--surface);padding:5px 11px;border-radius:6px;white-space:nowrap;
+}
+.toplink:hover{border-color:var(--outline);text-decoration:underline}
 
 /* ---------- layout ---------- */
 .work{display:grid;grid-template-columns:268px minmax(0,1fr) 312px;gap:1px;background:var(--hair);flex:1;min-height:0;overflow:hidden}
@@ -193,6 +198,7 @@ img{max-width:100%}
       <button id="viewBrazil" aria-pressed="false">Brazil overview</button>
     </div>
     <p class="topnote" id="topnote">2,808 H3 cells · 50 km × 50 km box</p>
+    <a class="toplink" href="sources.html">Data &amp; sources</a>
   </header>
 
   <div class="work">

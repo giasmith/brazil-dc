@@ -97,7 +97,7 @@ Summary:
 | --- | ---: |
 | Workbook sheets | 34 |
 | Data sheets processed | 19 |
-| Rows processed | 22,874 |
+| Rows processed | 22,323 |
 | Empty columns removed | 49 |
 | Rows removed | 0 |
 
@@ -722,8 +722,8 @@ Corpus composition:
 
 | Source group | Documents |
 | --- | ---: |
-| ReData, data-center, and sustainability government sources | 15 |
-| Indigenous, traditional-community, protected-area, and environmental-law sources | 12 |
+| ReData, data-center, and sustainability government sources | 12 |
+| Indigenous, traditional-community, protected-area, and environmental-law sources | 15 |
 | Peer-reviewed policy/conservation articles | 9 |
 
 Outputs:
