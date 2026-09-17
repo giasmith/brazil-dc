@@ -103,7 +103,7 @@ var S = {
   dcSel: null,
   filter: "all",
   eps: 0.62, hv: 25, line: 15, idc: 50,
-  published: true,
+  published: false,   // true = reproduce the pre-fix run (0 km read as missing); the corrected run is the default
   sel: null,
   natMetric: "score",
   natOverlays: {grid: true, buses: false, idc: false, gen: true, dc: true, protected: false, indigenous: false},
@@ -610,11 +610,11 @@ var HELP = {
   },
   phase4: {
     short: "Which cells survive the infrastructure constraints, which sit on the Pareto frontier, and the 25 recommended sites.",
-    long: "After the legal and degradation filters, a cell must also be within 25 km of a high-voltage substation, 15 km of a transmission line, and 50 km of an internet interconnection facility; a data center that cannot plug in is not a site. The survivors are compared on six objectives: grid cost, latency, energy shortfall, curtailment opportunity, land and water risk, and policy burden. A cell is on the frontier when no other cell beats it on every objective at once. The 25 recommended sites are the frontier cells with the highest resilience score; ten need human review."
+    long: "After the legal and degradation filters, a cell must also be within 25 km of a high-voltage substation, 15 km of a transmission line, and 50 km of an internet interconnection facility; a data center that cannot plug in is not a site. The survivors are compared on six objectives: grid cost, latency, energy shortfall, curtailment opportunity, land and water risk, and policy burden. A cell is on the frontier when no other cell beats it on every objective at once. The 25 recommended sites are the frontier cells with the highest resilience score; twelve need human review."
   },
   score: {
     short: "A single 0–100 summary of how well a surviving cell balances grid access, energy, land, and policy. Higher is better.",
-    long: "The score folds the six objectives into one number so cells can be sorted: grid access counts 24%, land and water safety 20%, energy opportunity 18%, latency 17%, policy burden 11%, and curtailment opportunity 10%. Each objective is scaled 0–1 with lower cost as better, so a cell with no trade-offs would score 100. It is meaningful only for cells that passed every hard constraint. Treat it as a way to compare candidates, not a verdict: the top-ranked cell scores 73.5, and correcting a known zero-distance bug promotes a different cell at 74.3."
+    long: "The score folds the six objectives into one number so cells can be sorted: grid access counts 24%, land and water safety 20%, energy opportunity 18%, latency 17%, policy burden 11%, and curtailment opportunity 10%. Each objective is scaled 0–1 with lower cost as better, so a cell with no trade-offs would score 100. It is meaningful only for cells that passed every hard constraint. Treat it as a way to compare candidates, not a verdict: the top-ranked cell scores 74.3, and fifteen of the 25 recommended cells sit directly on a transmission line."
   }
 };
 var helpTip = null, helpPop = null;
@@ -743,9 +743,9 @@ function renderLeft() {
     gt.appendChild(slider("sLine", "Max distance to line", 1, 60, 1, S.line, " km", function (v) { S.line = v; refreshModel(); }));
     gt.appendChild(slider("sIdc", "Max distance to fiber", 1, 120, 1, S.idc, " km", function (v) { S.idc = v; refreshModel(); }));
     var br = el("div", {class: "btnrow"});
-    var reset = el("button", {class: "btn", text: "Reset to published values"});
+    var reset = el("button", {class: "btn", text: "Reset to default values"});
     reset.onclick = function () {
-      S.eps = 0.62; S.hv = 25; S.line = 15; S.idc = 50; S.published = true;
+      S.eps = 0.62; S.hv = 25; S.line = 15; S.idc = 50; S.published = false;
       refreshModel(); renderLeft();
     };
     br.appendChild(reset);
@@ -753,11 +753,11 @@ function renderLeft() {
     rail.appendChild(gt);
 
     var gb = el("div", {class: "group"});
-    gb.appendChild(el("div", {class: "eyebrow", text: "Known defect"}));
-    gb.appendChild(check("bugFix", "Fix the 0 km bug", "Count a cell sitting exactly on a line as 0 km away, not infinitely far", !S.published, function (v) {
-      S.published = !v; refreshModel();
+    gb.appendChild(el("div", {class: "eyebrow", text: "Corrected defect"}));
+    gb.appendChild(check("bugFix", "Reproduce the pre-fix run", "Read a cell sitting exactly on a line as infinitely far, as the May 2026 run did", S.published, function (v) {
+      S.published = v; refreshModel();
     }));
-    gb.appendChild(el("div", {class: "callout", html: "The published Phase 4 run reads a distance of exactly <b>0 km</b> as <b>missing</b>, so <b>147 cells sitting directly on a transmission line</b> were excluded for being too far from one. Turning the fix on raises the feasible set from 819 to 966 — and promotes a cell scoring <b>74.33</b>, above the current top recommendation of 73.52."}));
+    gb.appendChild(el("div", {class: "callout", html: "Until September 17, 2026, Phase 4 read a distance of exactly <b>0 km</b> as <b>missing</b>, so <b>147 cells sitting directly on a transmission line</b> were excluded for being too far from one. The fix is now applied: 966 feasible, 505 on the frontier, top score <b>74.33</b>. Check the box to reproduce the pre-fix result (819 · 448 · 73.52)."}));
     rail.appendChild(gb);
 
   } else {
@@ -858,7 +858,7 @@ function renderRight() {
     g1.appendChild(counts);
     var pct = (RESULT.feasible.length / C.n * 100).toFixed(1);
     g1.appendChild(el("p", {class: "hint", html: pct + "% of the 2,808-cell grid survives. " +
-      (S.published ? "Reproducing the published run." : "With the 0 km fix applied.")}));
+      (S.published ? "Pre-fix run, as published in May 2026." : "Corrected run (0 km fix applied).")}));
     rail.appendChild(g1);
 
     var g2 = el("div", {class: "group"});

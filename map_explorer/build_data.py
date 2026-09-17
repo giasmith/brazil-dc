@@ -345,10 +345,12 @@ EPS, HV, LINE, IDCK = 0.62, 25.0, 15.0, 50.0
 INF = float("inf")
 
 def falsy_inf(v):
-    """reproduce the pipeline's `float(x or inf)` coercion: 0.0 becomes infinite"""
+    """reproduce the pre-fix pipeline's `float(x or inf)` coercion: 0.0 becomes infinite.
+    Phase 4 was corrected on 2026-09-17 (as_float); the explorer keeps this only so the
+    'Reproduce the pre-fix run' checkbox can show the May 2026 result (819 / 448 / 73.52)."""
     return v if v else INF
 
-def feasible(i, published=True):
+def feasible(i, published=False):
     if not ceara["fsor"][i] or ceara["polX"][i]:
         return False
     pd_ = ceara["pdeg"][i] or 1.0 if published else ceara["pdeg"][i]
@@ -376,10 +378,11 @@ def run(published):
 
 for pub in (True, False):
     f, fr, sh = run(pub)
-    print(f"{'published' if pub else 'corrected':10s}  feasible {len(f):4d}  frontier {len(fr):4d}  shortlist {len(sh)}")
+    print(f"{'pre-fix' if pub else 'corrected':10s}  feasible {len(f):4d}  frontier {len(fr):4d}  shortlist {len(sh)}")
 
 stored_short = {i for i in range(ceara["n"]) if label_vals[ceara["label"][i]] == "recommended_shortlist"}
 stored_feas = {i for i in range(ceara["n"]) if P[i]["phase4_feasible"]}
-f, fr, sh = run(True)
-print("published feasible matches stored:", set(f) == stored_feas)
-print("published shortlist matches stored:", set(sh) == stored_short)
+f, fr, sh = run(False)
+print("corrected feasible matches stored:", set(f) == stored_feas)
+print("corrected shortlist matches stored:", set(sh) == stored_short)
+assert set(f) == stored_feas and set(sh) == stored_short, "explorer's live solver disagrees with the Phase 4 outputs on disk"

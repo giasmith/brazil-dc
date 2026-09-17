@@ -20,16 +20,24 @@ Not tracked here, because it is large and fully reproducible: `clean_data/` and 
 (rebuild with the scripts), `papers/` and `gov_docs/` (third-party PDFs, all cited in the
 policy corpus), and `preprocessing.ipynb` (~92 MB of embedded output). See `.gitignore`.
 
-### Known defect in Phase 4
+### Phase 4 zero-distance defect (fixed September 17, 2026)
 
-`run_scn_phase4_optimization.py` reads each distance as
+Until September 2026, `run_scn_phase4_optimization.py` read each distance as
 `float(row.get(field, np.inf) or np.inf)`. `0.0` is falsy in Python, so a distance of
-**exactly 0 km is read as infinite** and 147 cells sitting directly on a transmission line
-were excluded for being too far from one. Correcting it raises the feasible set from 819 to
-966 and the Pareto frontier from 448 to 505, and promotes a cell scoring 74.33 — above the
-current top-ranked recommendation at 73.52. The same coercion affects
-`nearest_hv_ons_bus_km`, `nearest_idc_km` and `p_deg_rs`. The map explorer carries a toggle
-that switches between the published and corrected results.
+**exactly 0 km was read as infinite** and 147 cells sitting directly on a transmission line
+were excluded for being too far from one. The same coercion affected `nearest_hv_ons_bus_km`,
+`nearest_idc_km` and `p_deg_rs`. The script now uses the None/NaN-safe `as_float` helper.
+
+The Phase 4 outputs were regenerated with the fix by `scripts/rerun_phase4_feasibility.py`
+(objectives and scores were computed vectorized and never carried the defect; only
+feasibility, frontier, shortlist and labels changed). The corrected run has **966 feasible
+cells, 505 on the Pareto frontier, 25 recommended, 12 of them flagged for human review**, and a
+top resilience score of 74.33; fifteen of the 25 recommended cells sit directly on a
+transmission line. The pre-fix outputs (819 / 448 / 25, top score 73.52) are archived under
+`_archive/phase4_prefix_run_20260529/`, and the map explorer's "Reproduce the pre-fix run"
+checkbox recomputes them live. The folium inspector map in `phase4_optimization/` still shows
+the pre-fix run; rerun `run_scn_phase4_optimization.py` in an environment with geopandas to
+refresh it.
 
 ## Current Status
 
@@ -812,10 +820,10 @@ Findings:
 | Metric | Value |
 | --- | ---: |
 | H3 cells | 2,808 |
-| Phase 4 feasible cells | 819 |
-| Pareto frontier cells | 448 |
+| Phase 4 feasible cells | 966 (819 before the zero-distance fix) |
+| Pareto frontier cells | 505 (448 before the fix) |
 | Recommended shortlist cells | 25 |
-| Recommended cells requiring human review | 10 |
+| Recommended cells requiring human review | 12 (10 before the fix) |
 | Sentinel `p_deg_rs` epsilon | 0.62 |
 | Max distance to HV bus | 25 km |
 | Max distance to ONS line | 15 km |
@@ -823,7 +831,7 @@ Findings:
 
 Interpretation:
 
-Phase 4 completes the end-to-end SCN workflow. The toy MVP is still retained as a proof-of-logic artifact, but the canonical optimizer now uses Sentinel-derived `p_deg_rs`, bounded `lambda_policy`, and `fsor_allowed_phase3` from Phase 3. The recommended shortlist is a screening output, not a permitting conclusion: 10 of the top 25 cells still require human review because they are Medium-stringency cells rather than fully Low-stringency cells.
+Phase 4 completes the end-to-end SCN workflow. The toy MVP is still retained as a proof-of-logic artifact, but the canonical optimizer now uses Sentinel-derived `p_deg_rs`, bounded `lambda_policy`, and `fsor_allowed_phase3` from Phase 3. The recommended shortlist is a screening output, not a permitting conclusion: 12 of the top 25 cells still require human review because they are Medium-stringency cells rather than fully Low-stringency cells. Figures reflect the September 17, 2026 regeneration after the zero-distance fix.
 
 ## Main Maps
 

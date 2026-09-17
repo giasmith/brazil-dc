@@ -59,19 +59,19 @@ It pulls from `clean_data/sovereign_compute_nexus/phase4_optimization/phase4_all
 the ONS grid and curtailment CSVs, the merged data-center point layer, the state suitability table,
 and the boundary geometry in `data/`. Re-run it after any pipeline change and the map updates.
 
-## A defect the explorer exposes
+## A defect the explorer exposed (fixed September 17, 2026)
 
-The left rail carries a checkbox labeled **Fix the 0 km bug**, off by default so the map
-reproduces the published run exactly (819 feasible, 448 on the frontier, 25 recommended).
-
-`run_scn_phase4_optimization.py` reads each distance as `float(row.get(field, np.inf) or np.inf)`.
-In Python `0.0` is falsy, so a distance of **exactly 0 km reads as infinite**. The result is that
-**147 cells sitting directly on a transmission line were excluded for being too far from one**.
-
-Turning the fix on raises the feasible set from 819 to 966 and the frontier from 448 to 505, and
-promotes a cell with a resilience score of **74.33** — higher than the current top-ranked
-recommendation at 73.52. The same coercion applies to `nearest_hv_ons_bus_km`,
+Until September 2026, `run_scn_phase4_optimization.py` read each distance as
+`float(row.get(field, np.inf) or np.inf)`. In Python `0.0` is falsy, so a distance of
+**exactly 0 km read as infinite** and **147 cells sitting directly on a transmission line were
+excluded for being too far from one**. The same coercion applied to `nearest_hv_ons_bus_km`,
 `nearest_idc_km` and `p_deg_rs`.
+
+The script now uses a None/NaN-safe `as_float` helper and the Phase 4 outputs have been
+regenerated: 966 feasible, 505 on the frontier, 25 recommended (12 flagged for review), top
+score 74.33. The explorer opens on that corrected run. The left rail carries a checkbox
+labeled **Reproduce the pre-fix run** that re-applies the old coercion live, so the May 2026
+result (819 / 448 / 25, top score 73.52) remains one click away.
 
 The fix is to test for `None` rather than falsiness, e.g.:
 
