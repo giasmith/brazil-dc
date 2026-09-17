@@ -157,11 +157,11 @@ function recompute() {
 
 /* ------------------------------------------------------------ cell layers */
 var LAYERS = [
-  {id: "phase4", group: "Model output", name: "Phase 4 — what survives", note: "Excluded · feasible · frontier · shortlist"},
-  {id: "phase1", group: "Model output", name: "Phase 1 — legal screen", note: "Protected, indigenous, outside Ceará"},
-  {id: "phase3", group: "Model output", name: "Phase 3 — policy stringency", note: "Low · Medium · Critical"},
-  {id: "pdeg",   group: "Model output", name: "Phase 2 — degradation risk", note: "P_deg from Sentinel optical + radar"},
-  {id: "score",  group: "Model output", name: "Resilience score", note: "Phase 4 composite, 0–100"},
+  {id: "phase1", group: "Model output", name: "Legal exclusions", note: "Protected, indigenous, outside Ceará"},
+  {id: "pdeg",   group: "Model output", name: "Degradation risk", note: "How likely the land is already degraded, from satellite imagery"},
+  {id: "phase3", group: "Model output", name: "Policy stringency", note: "Low · Medium · Critical"},
+  {id: "phase4", group: "Model output", name: "Site shortlist", note: "Excluded · feasible · frontier · shortlist"},
+  {id: "score",  group: "Model output", name: "Resilience score", note: "Composite of surviving cells, 0–100"},
 
   {id: "ndvi",   group: "Satellite", name: "Vegetation health (NDVI)", note: "Sentinel-2 optical"},
   {id: "ndwi",   group: "Satellite", name: "Wetness (NDWI)", note: "Sentinel-2 optical"},
@@ -593,11 +593,82 @@ function paintNational() {
   NATL.pts.appendChild(lab);
 }
 
+/* ------------------------------------------------------------ layer help */
+/* Hover the "?" for a one-line explanation; click it for the reasoning (under 100 words). */
+var HELP = {
+  phase1: {
+    short: "Cells inside a conservation unit, an Indigenous land, or surface water, or outside Ceará, are removed before anything is scored.",
+    long: "This is the first filter. Official boundary files from IBGE, MMA, and FUNAI mark the state line, conservation units, and Indigenous lands; MapBiomas marks surface water. A cell that overlaps any of them is removed outright rather than penalized, because construction there is not lawfully available and ranking it would be misleading. Cells that survive but sit within 2.5 km of a protected or Indigenous boundary are kept and flagged for human review, since boundary-adjacent land is where licensing disputes concentrate."
+  },
+  pdeg: {
+    short: "How likely the land is already degraded, estimated from satellite imagery. Cells above the cap are excluded.",
+    long: "Two satellites observe each cell every quarter. Sentinel-2 measures vegetation health (NDVI) and surface wetness (NDWI) in visible and infrared light; Sentinel-1 radar measures backscatter (VV, VH), which reads surface roughness and moisture through cloud. Sparse vegetation, standing wetness, and radar signatures typical of bare or disturbed ground raise the probability, as do proximity to a protected boundary and a vulnerable land-cover class. The model excludes cells above the cap because building on degraded or waterlogged ground carries higher environmental and engineering risk; the slider on the left lets you change that cap."
+  },
+  phase3: {
+    short: "How much legal caution each cell carries: Low, Medium, or Critical, from fixed rules drawn from 36 legal and policy documents.",
+    long: "Each cell is classified by fixed rules drawn from 36 documents: the ReData law, the Constitution’s Indigenous and environmental articles, the conservation-unit statute, licensing rules, and peer-reviewed evidence. Critical means a hard legal conflict (overlap with a protected area, Indigenous land, or water, or severe degradation); the cell is excluded. Medium means the cell lies within 2.5 km of a protected boundary or shows elevated land-cover or degradation risk; it stays in, is flagged for human review, and is weighted 5× in ranking. Low carries weight 1. Every rule traces to a cited document."
+  },
+  phase4: {
+    short: "Which cells survive the infrastructure constraints, which sit on the Pareto frontier, and the 25 recommended sites.",
+    long: "After the legal and degradation filters, a cell must also be within 25 km of a high-voltage substation, 15 km of a transmission line, and 50 km of an internet interconnection facility; a data center that cannot plug in is not a site. The survivors are compared on six objectives: grid cost, latency, energy shortfall, curtailment opportunity, land and water risk, and policy burden. A cell is on the frontier when no other cell beats it on every objective at once. The 25 recommended sites are the frontier cells with the highest resilience score; ten need human review."
+  },
+  score: {
+    short: "A single 0–100 summary of how well a surviving cell balances grid access, energy, land, and policy. Higher is better.",
+    long: "The score folds the six objectives into one number so cells can be sorted: grid access counts 24%, land and water safety 20%, energy opportunity 18%, latency 17%, policy burden 11%, and curtailment opportunity 10%. Each objective is scaled 0–1 with lower cost as better, so a cell with no trade-offs would score 100. It is meaningful only for cells that passed every hard constraint. Treat it as a way to compare candidates, not a verdict: the top-ranked cell scores 73.5, and correcting a known zero-distance bug promotes a different cell at 74.3."
+  }
+};
+var helpTip = null, helpPop = null;
+function ensureHelpUI() {
+  if (helpTip) return;
+  helpTip = el("div", {class: "helptip", role: "tooltip"}); document.body.appendChild(helpTip);
+  helpPop = el("div", {class: "helppop", role: "dialog"}); helpPop.hidden = true; document.body.appendChild(helpPop);
+  document.addEventListener("click", function (e) {
+    if (helpPop.hidden) return;
+    var t = e.target;
+    if (helpPop.contains(t) || (t.classList && t.classList.contains("help"))) return;
+    closeHelp();
+  });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeHelp(); });
+  window.addEventListener("resize", closeHelp);
+}
+function placeNear(box, anchor) {
+  var r = anchor.getBoundingClientRect(), w = box.offsetWidth, h = box.offsetHeight;
+  var x = r.left, y = r.bottom + 8;
+  if (x + w > window.innerWidth - 12) x = window.innerWidth - 12 - w;
+  if (x < 12) x = 12;
+  if (y + h > window.innerHeight - 12) y = r.top - h - 8;
+  if (y < 12) y = 12;
+  box.style.left = x + "px"; box.style.top = y + "px";
+}
+function closeHelp() { if (helpPop) { helpPop.hidden = true; helpPop.__for = null; } }
+function helpButton(id, title) {
+  var h = HELP[id]; if (!h) return null;
+  ensureHelpUI();
+  var b = el("button", {class: "help", type: "button", "aria-label": "About " + title, text: "?"});
+  function show() { helpTip.textContent = h.short; helpTip.classList.add("on"); placeNear(helpTip, b); }
+  function hide() { helpTip.classList.remove("on"); }
+  b.addEventListener("mouseenter", show); b.addEventListener("mouseleave", hide);
+  b.addEventListener("focus", show); b.addEventListener("blur", hide);
+  b.addEventListener("click", function (e) {
+    e.preventDefault(); e.stopPropagation(); hide();
+    if (!helpPop.hidden && helpPop.__for === id) { closeHelp(); return; }
+    helpPop.innerHTML = ""; helpPop.__for = id;
+    helpPop.appendChild(el("h4", {text: title}));
+    helpPop.appendChild(el("p", {text: h.long}));
+    var x = el("button", {class: "x", type: "button", "aria-label": "Close", text: "×"});
+    x.onclick = function (ev) { ev.stopPropagation(); closeHelp(); };
+    helpPop.appendChild(x);
+    helpPop.hidden = false; placeNear(helpPop, b);
+  });
+  return b;
+}
+
 /* ------------------------------------------------------------- left rail */
-function radio(name, id, label, note, checked, onchange) {
+function radio(name, id, label, note, checked, onchange, helpId) {
   var inp = el("input", {type: "radio", name: name, id: name + "-" + id});
   inp.checked = checked; inp.onchange = function () { if (inp.checked) onchange(id); };
   var sp = el("span", {}); sp.appendChild(document.createTextNode(label));
+  if (helpId) { var hb = helpButton(helpId, label); if (hb) sp.appendChild(hb); }
   if (note) sp.appendChild(el("small", {text: note}));
   var l = el("label", {class: "opt"}); l.appendChild(inp); l.appendChild(sp);
   return l;
@@ -626,6 +697,7 @@ function slider(id, label, min, max, step, val, unit, onchange) {
 function renderLeft() {
   var rail = document.getElementById("railLeft");
   rail.innerHTML = "";
+  closeHelp();
 
   if (S.view === "ceara") {
     var groups = {};
@@ -636,7 +708,7 @@ function renderLeft() {
       groups[gname].forEach(function (l) {
         g.appendChild(radio("layer", l.id, l.name, l.note, S.layer === l.id, function (id) {
           S.layer = id; paintCeara(); renderRight();
-        }));
+        }, HELP[l.id] ? l.id : null));
       });
       rail.appendChild(g);
     });

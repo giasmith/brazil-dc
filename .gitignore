@@ -3,6 +3,7 @@
 # README lists. Kept out of git because it runs to several gigabytes.
 /clean_data/
 /data/
+/hosting/
 
 # ------------------------------------------------------------ source material
 # Third-party PDFs. Licensing varies and they are not ours to redistribute;

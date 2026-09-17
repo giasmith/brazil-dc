@@ -92,6 +92,29 @@ button,input,select{font:inherit;color:inherit}
 .opt span{font-size:13px;line-height:1.35}
 .opt small{display:block;color:var(--muted);font-size:11px;line-height:1.35}
 
+/* "?" help icon after a layer title: hover for a one-liner, click for the reasoning */
+.help{
+  display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;margin-left:6px;
+  border-radius:50%;border:1px solid var(--outline);background:var(--surface);color:var(--muted);
+  font:600 10px/1 "IBM Plex Sans",ui-sans-serif,system-ui,sans-serif;cursor:help;vertical-align:1px;padding:0;flex:none;
+}
+.help:hover,.help:focus-visible{border-color:var(--accent);color:var(--accent-ink)}
+.helptip{
+  position:fixed;z-index:30;max-width:260px;background:var(--surface);border:1px solid var(--hair);border-radius:6px;
+  box-shadow:var(--shadow);padding:7px 9px;font-size:12px;line-height:1.4;color:var(--ink2);
+  pointer-events:none;opacity:0;transition:opacity .09s;
+}
+.helptip.on{opacity:1}
+.helppop{
+  position:fixed;z-index:31;width:min(320px,calc(100vw - 32px));background:var(--surface);border:1px solid var(--hair);
+  border-radius:8px;box-shadow:var(--shadow);padding:12px 14px;font-size:12.5px;line-height:1.5;color:var(--ink2);
+}
+.helppop[hidden]{display:none}
+.helppop h4{margin:0 22px 6px 0;font-size:13px;font-weight:600;color:var(--ink)}
+.helppop p{margin:0}
+.helppop .x{position:absolute;top:6px;right:8px;border:0;background:none;color:var(--muted);cursor:pointer;font-size:16px;line-height:1;padding:2px 4px}
+.helppop .x:hover{color:var(--ink)}
+
 .slider{display:flex;flex-direction:column;gap:5px}
 .slider .row{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
 .slider label{font-size:12.5px;color:var(--ink2)}
@@ -232,6 +255,6 @@ img{max-width:100%}
 
 
 <script src="data.js?v=5"></script>
-<script src="app.js?v=6"></script>
+<script src="app.js?v=7"></script>
 </body>
 </html>

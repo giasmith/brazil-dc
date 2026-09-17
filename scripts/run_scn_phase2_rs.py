@@ -333,7 +333,47 @@ def add_sentinel_features(gdf: gpd.GeoDataFrame, sentinel_features: Path | None)
     }
 
 
-def add_degradation_probability(gdf: gpd.GeoDataFrame, use_sentinel: bool) -> gpd.GeoDataFrame:
+def add_alphaearth_features(gdf: gpd.GeoDataFrame, aef_features: Path | None, aef_weight: float) -> tuple[gpd.GeoDataFrame, dict]:
+    """Merge per-H3 AlphaEarth change features (ingest_alphaearth_h3.py) and optionally blend them into rs_sentinel_signal.
+
+    Only the cosine-change columns are used as signals; the 64 embedding axes are carried for maps/anomaly work but never scored.
+    """
+    if aef_features is None or not aef_features.exists():
+        return gdf, {"enabled": False, "source": str(aef_features) if aef_features else None}
+    if not 0.0 <= aef_weight <= 1.0:
+        raise SystemExit("--aef-weight must be between 0 and 1")
+
+    aef = pd.read_parquet(aef_features) if aef_features.suffix == ".parquet" else pd.read_csv(aef_features)
+    if "h3_id" not in aef.columns:
+        raise SystemExit(f"AlphaEarth feature table is missing h3_id: {aef_features}")
+    signal_cols = [c for c in ("aef_change_span", "aef_change_prev_max") if c in aef.columns]
+    if not signal_cols:
+        raise SystemExit(f"AlphaEarth feature table has no aef_change_* columns: {aef_features}")
+    keep = ["h3_id"] + signal_cols + [c for c in aef.columns if c.startswith(("aef_pc", "aef_n_pixels_"))]
+    aef = aef[keep].drop_duplicates("h3_id")
+    gdf = gdf.drop(columns=[c for c in keep if c != "h3_id" and c in gdf.columns], errors="ignore").merge(aef, on="h3_id", how="left")
+
+    change = pd.to_numeric(gdf["aef_change_span"] if "aef_change_span" in gdf.columns else gdf[signal_cols[0]], errors="coerce")
+    gdf["rs_aef_available"] = change.notna()
+    gdf["rs_aef_change_signal"] = normalize_minimize(change)  # 0 = stable signature, 1 = most changed (95th pct cap)
+    blended = aef_weight > 0  # applied inside add_degradation_probability as its own p_deg term
+    return gdf, {
+        "enabled": True,
+        "source": str(aef_features),
+        "rows": int(len(aef)),
+        "matched_h3_cells": int(gdf["rs_aef_available"].sum()),
+        "unmatched_h3_cells": int((~gdf["rs_aef_available"]).sum()),
+        "signal_column": "aef_change_span" if "aef_change_span" in signal_cols else signal_cols[0],
+        "aef_weight": aef_weight,
+        "used_in_p_deg_rs": blended,
+        "method": (
+            "Google Satellite Embedding V1 (AlphaEarth) annual 64-d unit vectors were averaged per H3 cell in Earth Engine; "
+            "1 - cosine similarity between years is used as a learned-but-bounded change signal. Embedding axes are not scored."
+        ),
+    }
+
+
+def add_degradation_probability(gdf: gpd.GeoDataFrame, use_sentinel: bool, aef_weight: float = 0.0) -> gpd.GeoDataFrame:
     gdf = gdf.copy()
     water = pd.to_numeric(gdf["water_surface_share_proxy"], errors="coerce").fillna(0).clip(0, 1)
     proxy_p_deg = (
@@ -344,14 +384,21 @@ def add_degradation_probability(gdf: gpd.GeoDataFrame, use_sentinel: bool) -> gp
         + 0.08 * gdf["rs_surface_water_sensitivity"]
     ).clip(0, 1)
     if use_sentinel and "rs_sentinel_signal" in gdf.columns:
+        # AlphaEarth year-over-year change gets its own term when requested; the other terms are
+        # scaled by (1 - w) so the weights still sum to 1 and w=0 reproduces the original formula.
+        w = aef_weight if (aef_weight > 0 and "rs_aef_change_signal" in gdf.columns) else 0.0
+        aef_term = gdf["rs_aef_change_signal"].fillna(0.0) if w else 0.0
         sentinel_p_deg = (
-            0.24 * gdf["rs_edge_exposure"]
-            + 0.24 * gdf["rs_sentinel_optical_stress"]
-            + 0.16 * gdf["rs_sentinel_water_signal"]
-            + 0.14 * gdf["rs_sentinel_sar_pressure"]
-            + 0.11 * gdf["rs_lulc_vulnerability"]
-            + 0.08 * gdf["rs_infrastructure_pressure"]
-            + 0.03 * gdf["rs_reconstruction_error_norm"]
+            (1 - w) * (
+                0.24 * gdf["rs_edge_exposure"]
+                + 0.24 * gdf["rs_sentinel_optical_stress"]
+                + 0.16 * gdf["rs_sentinel_water_signal"]
+                + 0.14 * gdf["rs_sentinel_sar_pressure"]
+                + 0.11 * gdf["rs_lulc_vulnerability"]
+                + 0.08 * gdf["rs_infrastructure_pressure"]
+                + 0.03 * gdf["rs_reconstruction_error_norm"]
+            )
+            + w * aef_term
         ).clip(0, 1)
         available = gdf["rs_sentinel_available"].astype(bool)
         p_deg = proxy_p_deg.mask(available, sentinel_p_deg)
@@ -605,6 +652,18 @@ def parse_args() -> argparse.Namespace:
         help="Optional H3-level Sentinel feature table extracted from GEE GeoTIFFs.",
     )
     parser.add_argument(
+        "--alphaearth-features",
+        type=Path,
+        default=None,
+        help="Optional per-H3 AlphaEarth table from scripts/ingest_alphaearth_h3.py (.parquet or .csv).",
+    )
+    parser.add_argument(
+        "--aef-weight",
+        type=float,
+        default=0.0,
+        help="Blend weight (0-1) of the AlphaEarth change signal into rs_sentinel_signal. 0 merges columns without changing scores.",
+    )
+    parser.add_argument(
         "--force-proxy",
         action="store_true",
         help="Ignore any Sentinel feature table and run the original local proxy only.",
@@ -622,7 +681,9 @@ def main() -> None:
     gdf, model_meta = add_pca_autoencoder_proxy(gdf, args.pca_components)
     sentinel_path = None if args.force_proxy else args.sentinel_features
     gdf, sentinel_meta = add_sentinel_features(gdf, sentinel_path)
-    gdf = add_degradation_probability(gdf, use_sentinel=bool(sentinel_meta.get("enabled")))
+    gdf, aef_meta = add_alphaearth_features(gdf, None if args.force_proxy else args.alphaearth_features, args.aef_weight)
+    sentinel_meta["alphaearth"] = aef_meta
+    gdf = add_degradation_probability(gdf, use_sentinel=bool(sentinel_meta.get("enabled")), aef_weight=args.aef_weight if aef_meta.get("enabled") else 0.0)
     summary = write_outputs(gdf, model_meta, sentinel_meta, args)
     print(json.dumps(summary, ensure_ascii=False, indent=2))
     preview_cols = [
@@ -635,8 +696,12 @@ def main() -> None:
         "nearest_constraint_km",
         "nearest_constraint_name",
     ]
-    print("\nHighest RS Phase 2 edge-effect candidates")
-    print(gdf.sort_values("p_deg_rs", ascending=False)[preview_cols].head(20).to_string(index=False))
+    if "rs_aef_change_signal" in gdf.columns:
+        preview_cols.insert(2, "rs_aef_change_signal")
+    water_share = pd.to_numeric(gdf["water_surface_share_proxy"], errors="coerce").fillna(0)
+    buildable = gdf[~gdf["hard_exclusion"].astype(bool) & (water_share < 0.5)]
+    print(f"\nHighest RS Phase 2 edge-effect candidates among {len(buildable):,} non-excluded land cells")
+    print(buildable.sort_values("p_deg_rs", ascending=False)[preview_cols].head(20).to_string(index=False))
 
 
 if __name__ == "__main__":

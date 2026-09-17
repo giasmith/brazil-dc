@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 CASE_STUDY_BOX = ROOT / "clean_data" / "sovereign_compute_nexus" / "ceara_case_study_box.geojson"
 OUT_DIR = ROOT / "data" / "gee"
 DEFAULT_DRIVE_FOLDER = "SCN_GEE_Sentinel_Ceara"
-DEFAULT_EE_PROJECT = "edwc-483823"
+DEFAULT_EE_PROJECT = "studied-union-325415"
 
 
 PRODUCT_ALIASES = {

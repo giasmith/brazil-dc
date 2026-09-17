@@ -125,21 +125,41 @@ def add_phase4_objectives(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
     return gdf
 
 
+def as_float(value, default: float) -> float:
+    """Coerce a row field to float, substituting ``default`` only when the value is
+    genuinely missing (None / NaN / empty string).
+
+    Do not write ``float(x or default)`` for this: ``0.0`` is falsy in Python, so a
+    cell sitting exactly on a transmission line (distance 0.0 km) or with a
+    degradation probability of exactly 0.0 would be silently replaced by the
+    default and rejected. Phase 4 runs before 2026-09-15 carried that defect.
+    """
+    if value is None:
+        return default
+    try:
+        out = float(value)
+    except (TypeError, ValueError):
+        return default
+    if math.isnan(out):
+        return default
+    return out
+
+
 def exclusion_reasons(row: pd.Series, args: argparse.Namespace) -> str:
     reasons: list[str] = []
     if not bool(row.get("fsor_allowed_phase3", False)):
         reasons.append("phase3_fsor_disallowed")
     if bool(row.get("policy_hard_exclusion", False)):
         reasons.append("phase3_policy_hard_exclusion")
-    if float(row.get("p_deg_rs", 1) or 1) > args.epsilon:
+    if as_float(row.get("p_deg_rs"), 1.0) > args.epsilon:
         reasons.append("p_deg_rs_above_epsilon")
-    if float(row.get("nearest_hv_ons_bus_km", np.inf) or np.inf) > args.max_hv_bus_km:
+    if as_float(row.get("nearest_hv_ons_bus_km"), np.inf) > args.max_hv_bus_km:
         reasons.append("too_far_from_hv_bus")
-    if float(row.get("nearest_ons_line_km", np.inf) or np.inf) > args.max_line_km:
+    if as_float(row.get("nearest_ons_line_km"), np.inf) > args.max_line_km:
         reasons.append("too_far_from_ons_line")
-    if float(row.get("nearest_idc_km", np.inf) or np.inf) > args.max_idc_km:
+    if as_float(row.get("nearest_idc_km"), np.inf) > args.max_idc_km:
         reasons.append("too_far_from_idc_anchor")
-    if float(row.get("nearby_renewable_mw", 0) or 0) < args.min_renewable_mw:
+    if as_float(row.get("nearby_renewable_mw"), 0.0) < args.min_renewable_mw:
         reasons.append("insufficient_nearby_renewables")
     if args.exclude_human_review and bool(row.get("human_review_required", False)):
         reasons.append("human_review_required")

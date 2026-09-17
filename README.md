@@ -1,6 +1,6 @@
 # Brazil Sovereign Compute Nexus Pipeline
 
-Last updated: 2026-05-27
+Last updated: 2026-09-17
 
 This repository is now a geospatial energy, data-center, and socio-ecological siting pipeline for Brazil. It started as a cleaned Global Energy Monitor style energy dataset, but the recent work expanded it into a reproducible research stack for the **Sovereign Compute Nexus** framework: a policy-aware digital twin that tests where hyperscale data-center infrastructure can be sited without violating power-grid, water, land-cover, protected-land, or indigenous-territory constraints.
 
@@ -462,7 +462,7 @@ Default request window:
 | Export destination | Google Drive |
 | Drive folder | `SCN_GEE_Sentinel_Ceara` |
 | Local Google Drive Desktop path | `/Users/nqj5zk/Library/CloudStorage/GoogleDrive-starlab642@gmail.com/My Drive/SCN_GEE_Sentinel_Ceara` |
-| Earth Engine project id | `edwc-483823` |
+| Earth Engine project id | `studied-union-325415` |
 | Prepared export tasks | 38 |
 
 Outputs already created locally:
@@ -473,7 +473,7 @@ Outputs already created locally:
 
 Current submission status:
 
-The Earth Engine Python API is installed locally and the export tasks were submitted under project `edwc-483823`.
+The Earth Engine Python API is installed locally and the export tasks were submitted under project `studied-union-325415`.
 
 Sentinel-2 retry note:
 
@@ -522,14 +522,14 @@ Ingest outputs:
 Task status can be checked with:
 
 ```bash
-earthengine --project edwc-483823 task list
+earthengine --project studied-union-325415 task list
 ```
 
 For a larger model-training run, switch to monthly composites:
 
 ```bash
 python3 scripts/request_sentinel_gee_exports.py \
-  --ee-project edwc-483823 \
+  --ee-project studied-union-325415 \
   --frequency monthly
 ```
 
@@ -673,6 +673,19 @@ Findings:
 Interpretation:
 
 Phase 2 now has two evidence levels. The repository-local CSV/GeoJSON outputs preserve the original auditable proxy so the solver remains runnable end-to-end, but the canonical Phase 2 solver table now uses Sentinel-derived H3 features for all 2,808 cells. The upgraded workflow uses Google Drive-mounted Sentinel-1/2 GeoTIFFs, H3 polygon reconstruction, and sequential zonal statistics to produce real optical and radar features for the same decision cells. Phase 3 can consume the refreshed Sentinel-derived `p_deg_rs` inputs without changing the policy-classifier interface.
+
+### Phase 2b: AlphaEarth Embedding Features (learned, below the constraint layer)
+
+`scripts/request_alphaearth_h3_exports.py` asks Earth Engine to average Google's Satellite Embedding V1 (AlphaEarth Foundations, 64-d unit vectors, 10 m, annual from 2017, CC-BY-4.0) over each H3 cell and to compute the mean per-pixel cosine similarity with the previous year. `scripts/ingest_alphaearth_h3.py` merges the Drive CSVs into `clean_data/sovereign_compute_nexus/phase2_rs/alphaearth_h3_<region>_r<res>.parquet`. Phase 2 accepts it via `--alphaearth-features` and, only when `--aef-weight` > 0, blends the cosine-change signal into `rs_sentinel_signal`. The embedding axes are never scored; the hard-constraint and policy layers stay deterministic.
+
+```bash
+python3 -m pip install h3 earthengine-api
+python3 scripts/request_alphaearth_h3_exports.py --dry-run                      # Ceará box, res 8, 2021-2024
+python3 scripts/request_alphaearth_h3_exports.py --ee-project studied-union-325415       # submit ~8 table tasks
+python3 scripts/ingest_alphaearth_h3.py --drive-dir "<Drive>/SCN_GEE_AlphaEarth"
+python3 scripts/run_scn_phase2_rs.py --sentinel-features phase2_rs_features_for_solver.csv \
+    --alphaearth-features clean_data/sovereign_compute_nexus/phase2_rs/alphaearth_h3_ceara_case_study_box_r8.parquet --aef-weight 0.25
+```
 
 ### Phase 3: Bounded Policy Classifier
 
@@ -834,11 +847,25 @@ The SCN H3 polygon maps now use a docked bottom-third inspector instead of Leafl
 | SCN Phase 3 policy | `clean_data/sovereign_compute_nexus/phase3_policy/phase3_policy_map.html` |
 | SCN Phase 4 constrained optimization | `clean_data/sovereign_compute_nexus/phase4_optimization/phase4_optimization_map.html` |
 
+## Data Conventions
+
+Decisions made on 2026-09-17 while preparing the national expansion. Every new output should follow them.
+
+- **Coordinate reference system: EPSG:4326 (WGS 84).** geobr, ONS, PeeringDB, OSM and the GEE exports already ship in it, and it is what GeoParquet, PMTiles and MapLibre expect. SIRGAS 2000 (EPSG:4674, Brazil's official datum) differs from WGS 84 by centimetres, far below the resolution of any layer here. Call `.to_crs(4326)` explicitly before every write; compute areas and distances in an equal-area projection (e.g. EPSG:5880, SIRGAS 2000 / Brazil Polyconic), never in degrees.
+- **Territorial layers: geobr 2025 release only.** States, municipalities, conservation units and Indigenous lands all come from `data/brazil_geospatial/*_2025_simplified.parquet` (Indigenous lands originate from FUNAI, redistributed by IPEA geobr). A FUNAI 2019 shapefile and two single-feature test shapefiles that no script reads were moved to `_archive/superseded_layers_20260917/`.
+- **ONS raw data: Parquet only.** ONS publishes early curtailment months only as CSV; `scripts/finalize_ons_data.py` converts them with explicit dtypes (`din_*` -> datetime, `val_*`/`flg_*` -> float, others -> string) and moves the CSV originals to `_archive/`. `data/ons/ons_inventory.json` lists every file with row count and time span.
+- **ONS time coverage.** Wind curtailment runs 2021-10 to 2026-05; solar curtailment starts only in 2024-04 because ONS began publishing it then. Daily load (`carga_energia_di`) and hourly subsystem balance (`balanco_energia_subsistema_ho`) cover 2021 to 2025 after running `finalize_ons_data.py`; `build_ons_official_grid.py` and `compare_ons_power_grid.py` still use the 2025 balance alone as a snapshot of the current dispatch mix, which is intentional. Any curtailment-as-share-of-load figure must use matching years.
+
+## Hosting Bundle
+
+`scripts/build_hosting_bundle.py` turns `clean_data/` into `hosting/` (gitignored): state-partitioned GeoParquet for every national vector layer, Parquet tables, a single PMTiles tileset (requires `brew install tippecanoe`), a `manifest.json`, and the dataset card from `docs/hosting_dataset_card.md`. Upload it with `huggingface-cli upload <user>/<repo> hosting . --repo-type dataset`; the map explorer and notebooks then read the layers over HTTP instead of bundling them.
+
 ## Reproducibility
 
 Run the major stages in this order:
 
 ```bash
+python3 scripts/finalize_ons_data.py
 python3 scripts/build_brazil_power_grid.py
 python3 scripts/build_ons_official_grid.py
 python3 scripts/compare_ons_power_grid.py
@@ -856,13 +883,14 @@ python3 scripts/run_scn_mvp_pareto.py
 python3 scripts/run_scn_phase2_rs.py --sentinel-features phase2_rs_features_for_solver.csv
 python3 scripts/run_scn_phase3_policy.py --policy-corpus docs/phase3_redata_policy_corpus.json
 python3 scripts/run_scn_phase4_optimization.py
+python3 scripts/build_hosting_bundle.py
 ```
 
 After Earth Engine authentication, submit the actual Sentinel export tasks:
 
 ```bash
 earthengine authenticate
-python3 scripts/request_sentinel_gee_exports.py --ee-project edwc-483823
+python3 scripts/request_sentinel_gee_exports.py --ee-project studied-union-325415
 ```
 
 The notebook `preprocessing.ipynb` also contains runnable sections for these steps.
@@ -870,7 +898,7 @@ The notebook `preprocessing.ipynb` also contains runnable sections for these ste
 ## Important Caveats
 
 - The LULC raster is currently a readable candidate file with a `.crdownload` filename. Replace it with the completed MapBiomas file before publication-grade results.
-- Sentinel-1/2 GEE export tasks were submitted under project `edwc-483823`; check Earth Engine task status before assuming the GeoTIFFs are available in Google Drive. Use the `_v2` Sentinel-2 exports because the first S2 batch failed on mixed band dtypes.
+- Sentinel-1/2 GEE export tasks were submitted under project `studied-union-325415`; check Earth Engine task status before assuming the GeoTIFFs are available in Google Drive. Use the `_v2` Sentinel-2 exports because the first S2 batch failed on mixed band dtypes.
 - Phase 2 still retains the auditable proxy artifacts locally, but the report methodology should describe the upgraded Google Colab plus Google Drive Sentinel extraction workflow as the path from proxy features to true remote-sensing inputs.
 - Phase 3 is a bounded deterministic classifier, not a full legal RAG system. This is intentional for solver safety.
 - ONS topology stress is modeled with DC power-flow approximations, not full AC optimal power flow.
