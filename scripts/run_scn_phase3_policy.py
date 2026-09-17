@@ -151,6 +151,24 @@ def load_phase2() -> gpd.GeoDataFrame:
     return gdf
 
 
+def as_float(value, default: float) -> float:
+    """Coerce a row field to float, substituting ``default`` only when the value is genuinely
+    missing (None / NaN / empty string).
+
+    Not ``float(x or default)``: 0.0 is falsy, so a cell sitting exactly on a conservation-unit or
+    indigenous boundary (0.0 km away) would be read as 9999 km and lose its review-buffer reason.
+    The review flag itself comes from the vectorised path in classify_policy(), which was always
+    correct; this only affected the human-readable policy_reason text.
+    """
+    if value is None:
+        return default
+    try:
+        out = float(value)
+    except (TypeError, ValueError):
+        return default
+    return default if out != out else out
+
+
 def reason_for_row(row: pd.Series, args: argparse.Namespace) -> str:
     reasons: list[str] = []
     if bool(row.get("protected_overlap", False)):
@@ -167,7 +185,7 @@ def reason_for_row(row: pd.Series, args: argparse.Namespace) -> str:
         reasons.append("p_deg_rs_above_epsilon")
     if bool(row.get("boundary_fray_cell", False)):
         reasons.append("protected_or_indigenous_fray_cell")
-    if float(row.get("nearest_constraint_km", 9999) or 9999) <= args.boundary_review_km:
+    if as_float(row.get("nearest_constraint_km"), 9999.0) <= args.boundary_review_km:
         reasons.append("within_boundary_review_buffer")
     if bool(row.get("treatment_proxy_near_infrastructure_fray", False)):
         reasons.append("infrastructure_pressure_at_fray")

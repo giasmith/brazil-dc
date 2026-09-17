@@ -93,7 +93,14 @@ def add_phase4_objectives(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
     p_deg = pd.to_numeric(gdf["p_deg_rs"], errors="coerce").fillna(1).clip(0, 1)
     water = pd.to_numeric(gdf["water_surface_share_proxy"], errors="coerce").fillna(0).clip(0, 1)
     lulc = pd.to_numeric(gdf["rs_lulc_vulnerability"], errors="coerce").fillna(0.5).clip(0, 1)
-    sentinel = pd.to_numeric(gdf.get("rs_sentinel_signal", 0), errors="coerce").fillna(0.5).clip(0, 1)
+    # gdf.get(col, 0) returns a bare int when the column is absent, and an int has no .fillna,
+    # so a --force-proxy run (no Sentinel table) used to crash here. Missing Sentinel evidence is
+    # scored neutral (0.5), the same value a NaN gets, rather than 0, which would read as "best possible".
+    sentinel_signal = (
+        gdf["rs_sentinel_signal"] if "rs_sentinel_signal" in gdf.columns
+        else pd.Series(0.5, index=gdf.index)
+    )
+    sentinel = pd.to_numeric(sentinel_signal, errors="coerce").fillna(0.5).clip(0, 1)
     water_land_risk = (0.48 * p_deg + 0.22 * water + 0.18 * lulc + 0.12 * sentinel).clip(0, 1)
 
     lambda_norm = normalize_minimize(gdf["lambda_policy"], cap_quantile=1.0)

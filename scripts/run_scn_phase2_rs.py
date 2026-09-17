@@ -314,6 +314,14 @@ def add_sentinel_features(gdf: gpd.GeoDataFrame, sentinel_features: Path | None)
         "source": str(sentinel_features),
         "rows": int(len(sentinel)),
         "matched_h3_cells": int(gdf["rs_sentinel_available"].sum()),
+        "unmatched_h3_cells": int((~gdf["rs_sentinel_available"]).sum()),
+        "unmatched_note": (
+            "An unmatched cell is not left blank. normalize_minimize() fills missing values with the "
+            "95th percentile of the observed distribution, so a cell with no Sentinel row scores as one "
+            "of the greenest and least stressed in the box and is unlikely to be excluded by the p_deg "
+            "ceiling. Re-export the feature table whenever the study box changes, or pass "
+            "--require-rs-coverage to fail instead of imputing."
+        ),
         "feature_columns": sentinel_cols,
         "derived_columns": [
             "rs_sentinel_ndvi",
@@ -371,6 +379,24 @@ def add_alphaearth_features(gdf: gpd.GeoDataFrame, aef_features: Path | None, ae
             "1 - cosine similarity between years is used as a learned-but-bounded change signal. Embedding axes are not scored."
         ),
     }
+
+
+def check_rs_coverage(gdf: gpd.GeoDataFrame, sentinel_meta: dict, aef_meta: dict) -> None:
+    """Refuse to score cells whose remote-sensing features would be imputed rather than measured."""
+    gaps = []
+    if sentinel_meta.get("enabled") and "rs_sentinel_available" in gdf.columns:
+        missing = int((~gdf["rs_sentinel_available"]).sum())
+        if missing:
+            gaps.append(f"{missing} of {len(gdf)} cells have no Sentinel features ({sentinel_meta.get('source')})")
+    if aef_meta.get("enabled") and "rs_aef_available" in gdf.columns:
+        missing = int((~gdf["rs_aef_available"]).sum())
+        if missing:
+            gaps.append(f"{missing} of {len(gdf)} cells have no AlphaEarth features ({aef_meta.get('source')})")
+    if gaps:
+        raise SystemExit(
+            "--require-rs-coverage: " + "; ".join(gaps) + ". Re-run the Earth Engine exports and the "
+            "ingest scripts for the current study box before scoring."
+        )
 
 
 def add_degradation_probability(gdf: gpd.GeoDataFrame, use_sentinel: bool, aef_weight: float = 0.0) -> gpd.GeoDataFrame:
@@ -668,6 +694,11 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Ignore any Sentinel feature table and run the original local proxy only.",
     )
+    parser.add_argument(
+        "--require-rs-coverage",
+        action="store_true",
+        help="Fail if any H3 cell lacks Sentinel (or, when supplied, AlphaEarth) features instead of imputing them.",
+    )
     return parser.parse_args()
 
 
@@ -683,6 +714,8 @@ def main() -> None:
     gdf, sentinel_meta = add_sentinel_features(gdf, sentinel_path)
     gdf, aef_meta = add_alphaearth_features(gdf, None if args.force_proxy else args.alphaearth_features, args.aef_weight)
     sentinel_meta["alphaearth"] = aef_meta
+    if args.require_rs_coverage:
+        check_rs_coverage(gdf, sentinel_meta, aef_meta)
     gdf = add_degradation_probability(gdf, use_sentinel=bool(sentinel_meta.get("enabled")), aef_weight=args.aef_weight if aef_meta.get("enabled") else 0.0)
     summary = write_outputs(gdf, model_meta, sentinel_meta, args)
     print(json.dumps(summary, ensure_ascii=False, indent=2))

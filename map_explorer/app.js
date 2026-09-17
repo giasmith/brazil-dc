@@ -456,14 +456,14 @@ function drawInset() {
       sv.appendChild(mk("path", {d: d, fill: f.ab === "CE" ? css("--accent-soft") : css("--sunk"), stroke: f.ab === "CE" ? css("--accent") : css("--hair"), "stroke-width": f.ab === "CE" ? 1 : 0.5}));
     });
   });
-  // the 50 km box is ~1% of Brazil's width; draw it at a minimum legible size, centered on the true location
+  // the study box is ~1.5% of Brazil's width; draw it at a minimum legible size, centered on the true location
   var bx = C.box.map(function (pt) { return X(pt[0]); }), by = C.box.map(function (pt) { return Y(pt[1]); });
   var cx = (Math.min.apply(null, bx) + Math.max.apply(null, bx)) / 2, cy = (Math.min.apply(null, by) + Math.max.apply(null, by)) / 2;
   var sz = Math.max(9, Math.max.apply(null, bx) - Math.min.apply(null, bx));
   sv.appendChild(mk("rect", {x: cx - sz / 2, y: cy - sz / 2, width: sz, height: sz, fill: "none", stroke: SELECTED, "stroke-width": 1.6}));
   sv.appendChild(mk("circle", {cx: cx, cy: cy, r: 1.6, fill: SELECTED}));
   box.appendChild(sv);
-  box.appendChild(el("div", {class: "cap", html: "<b>Ceará</b> · 50 × 50 km study box"}));
+  box.appendChild(el("div", {class: "cap", html: "<b>Ceará</b> · 75 × 55 km study box"}));
 }
 
 function ceMove(e) {
@@ -829,7 +829,7 @@ function renderLeft() {
 
     var gf = el("div", {class: "group"});
     gf.appendChild(el("div", {class: "eyebrow", text: "Show only"}));
-    [["all", "Every cell", "All 2,808"], ["feasible", "Feasible cells", "Pass every hard constraint"],
+    [["all", "Every cell", "All 4,633"], ["feasible", "Feasible cells", "Pass every hard constraint"],
      ["frontier", "Pareto frontier", "Nothing beats them on all six objectives"],
      ["shortlist", "Recommended shortlist", "Top 25 by resilience score"]].forEach(function (f) {
       gf.appendChild(radio("filter", f[0], f[1], f[2], S.filter === f[0], function (id) {
@@ -842,11 +842,14 @@ function renderLeft() {
     go.appendChild(el("div", {class: "eyebrow", text: "Overlays"}));
     go.appendChild(check("ovProt", "Protected areas", "Conservation units", S.overlays.protected, function (v) { S.overlays.protected = v; paintCeara(); }));
     go.appendChild(check("ovIndi", "Indigenous land", "Demarcated territories", S.overlays.indigenous, function (v) { S.overlays.indigenous = v; paintCeara(); }));
-    go.appendChild(check("ovBox", "Study box", "50 km × 50 km", S.overlays.box, function (v) { S.overlays.box = v; paintCeara(); }));
+    go.appendChild(check("ovBox", "Study box", "75 km × 55 km", S.overlays.box, function (v) { S.overlays.box = v; paintCeara(); }));
     go.appendChild(check("ovGen", "Power plants", "Colored by generation type", S.overlays.gen, function (v) { S.overlays.gen = v; paintCeara(); renderRight(); }));
     statusChecks("ovGenSt", S.genStatus, function () { paintCeara(); renderRight(); }).forEach(function (n) { go.appendChild(n); });
-    go.appendChild(check("ovDc", "Data centers — curated list", "Fortaleza facilities, just east of the box; zoom out to see them", S.overlays.dc, function (v) { S.overlays.dc = v; paintCeara(); renderRight(); }));
+    go.appendChild(check("ovDc", "Data centers — curated list", "Fortaleza facilities, now inside the box", S.overlays.dc, function (v) { S.overlays.dc = v; paintCeara(); renderRight(); }));
     statusChecks("ovDcSt", S.dcStatus, function () { paintCeara(); renderRight(); }).forEach(function (n) { go.appendChild(n); });
+    go.appendChild(el("p", {class: "hint", style: "margin-top:2px", html:
+      "Box widened to 75 × 55 km on September 17, 2026 so the Fortaleza facilities fall inside it. " +
+      "Degradation risk in this run comes from the local proxy, not Sentinel — those exports are pending."}));
     rail.appendChild(go);
 
     var gt = el("div", {class: "group"});
@@ -963,7 +966,7 @@ function renderRight() {
     counts.appendChild(countTile(fmt(rev), "of those need review"));
     g1.appendChild(counts);
     var pct = (RESULT.feasible.length / C.n * 100).toFixed(1);
-    g1.appendChild(el("p", {class: "hint", html: pct + "% of the 2,808-cell grid survives."}));
+    g1.appendChild(el("p", {class: "hint", html: pct + "% of the 4,633-cell grid survives."}));
     rail.appendChild(g1);
 
     var g2 = el("div", {class: "group"});
@@ -998,7 +1001,7 @@ function renderRight() {
       default: {
         var cfg = SEQ_LAYER[S.layer];
         if (cfg) g2.appendChild(rampLegend(RAMPS[cfg.ramp], EXT[cfg.ext][0], EXT[cfg.ext][1], cfg.d, cfg.unit));
-        if (S.layer === "pdeg") g2.appendChild(el("p", {class: "hint", html: "Cells above &epsilon; = " + S.eps.toFixed(2) + " are excluded. 355 cells sit exactly at the 0.90 ceiling."}));
+        if (S.layer === "pdeg") g2.appendChild(el("p", {class: "hint", html: "Cells above &epsilon; = " + S.eps.toFixed(2) + " are excluded. 501 cells sit exactly at the 0.90 ceiling."}));
       }
     }
     if (S.overlays.gen && C.gen && C.gen.lat.length) {
@@ -1188,7 +1191,7 @@ function setView(v) {
     ? "Drag to pan · scroll to zoom · click a cell for its record"
     : "Drag to pan · scroll to zoom · click a state for its record";
   document.getElementById("topnote").textContent = v === "ceara"
-    ? "2,808 H3 cells · 50 km × 50 km box"
+    ? "4,633 H3 cells · 75 km × 55 km box"
     : "27 states · 1,705 substations · 336 data centers";
   hideTip();
   var inset = document.getElementById("inset"); if (inset) inset.hidden = v !== "ceara";

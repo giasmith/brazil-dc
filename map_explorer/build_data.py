@@ -86,12 +86,15 @@ ceara = {
     "subVals": sub_vals, "sub": sub_idx,
     "idcVals": idc_vals, "idcName": idc_idx,
     # phase 4 outputs
-    "oGrid": col("objective_grid_cost", r(5)),
-    "oLat": col("objective_latency_cost", r(5)),
-    "oEner": col("objective_energy_shortfall", r(5)),
-    "oCurt": col("objective_curtailment_shortfall", r(5)),
-    "oRisk": col("objective_water_land_risk", r(5)),
-    "oPol": col("objective_policy_burden", r(5)),
+    # 7 dp, not 5: the explorer recomputes the Pareto frontier live so the sliders work, and at
+    # 5 dp a cell whose objectives tie another one to within 1e-5 flips to "dominated". That cost
+    # exactly one frontier cell (8880103935fffff) against the Phase 4 outputs on 2026-09-17.
+    "oGrid": col("objective_grid_cost", r(7)),
+    "oLat": col("objective_latency_cost", r(7)),
+    "oEner": col("objective_energy_shortfall", r(7)),
+    "oCurt": col("objective_curtailment_shortfall", r(7)),
+    "oRisk": col("objective_water_land_risk", r(7)),
+    "oPol": col("objective_policy_burden", r(7)),
     "score": col("phase4_resilience_score", r(2)),
     "labelVals": label_vals, "label": label_idx,
 }

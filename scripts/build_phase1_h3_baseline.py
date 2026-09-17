@@ -42,15 +42,33 @@ def require_h3():
         ) from exc
 
 
-def case_study_box(center_lat: float, center_lon: float, box_km: float) -> gpd.GeoDataFrame:
+def case_study_box(center_lat: float, center_lon: float, box_km_ew: float, box_km_ns: float) -> gpd.GeoDataFrame:
     point = gpd.GeoSeries([Point(center_lon, center_lat)], crs="EPSG:4326").to_crs(PROJECTED_CRS).iloc[0]
-    half_m = box_km * 1000 / 2
-    geom = box(point.x - half_m, point.y - half_m, point.x + half_m, point.y + half_m)
+    half_ew_m = box_km_ew * 1000 / 2
+    half_ns_m = box_km_ns * 1000 / 2
+    geom = box(point.x - half_ew_m, point.y - half_ns_m, point.x + half_ew_m, point.y + half_ns_m)
     return gpd.GeoDataFrame(
-        [{"case_study": "ceara_box", "center_lat": center_lat, "center_lon": center_lon, "box_km": box_km}],
+        [{
+            "case_study": "ceara_box",
+            "center_lat": center_lat,
+            "center_lon": center_lon,
+            "box_km_ew": box_km_ew,
+            "box_km_ns": box_km_ns,
+            # kept so the original square runs still round-trip
+            "box_km": box_km_ew if box_km_ew == box_km_ns else None,
+        }],
         geometry=[geom],
         crs=PROJECTED_CRS,
     ).to_crs("EPSG:4326")
+
+
+def box_dimensions(args: argparse.Namespace) -> tuple[float, float]:
+    """East-west and north-south extents in km. --box-km alone still gives the original square."""
+    box_km_ew = args.box_km_ew if args.box_km_ew is not None else args.box_km
+    box_km_ns = args.box_km_ns if args.box_km_ns is not None else args.box_km
+    if box_km_ew <= 0 or box_km_ns <= 0:
+        raise SystemExit("Case-study box dimensions must be positive.")
+    return float(box_km_ew), float(box_km_ns)
 
 
 def h3_cells_from_polygon(h3, polygon: Polygon, resolution: int) -> list[str]:
@@ -87,9 +105,9 @@ def h3_centroid(h3, cell: str) -> tuple[float, float]:
     return float(lat), float(lon)
 
 
-def build_h3_grid(center_lat: float, center_lon: float, box_km: float, resolution: int) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]:
+def build_h3_grid(center_lat: float, center_lon: float, box_km_ew: float, box_km_ns: float, resolution: int) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]:
     h3 = require_h3()
-    study_box = case_study_box(center_lat, center_lon, box_km)
+    study_box = case_study_box(center_lat, center_lon, box_km_ew, box_km_ns)
     cells = h3_cells_from_polygon(h3, study_box.geometry.iloc[0], resolution)
     records = []
     for cell in cells:
@@ -259,7 +277,8 @@ def add_raster_features(grid: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
 
 
 def build_baseline(args: argparse.Namespace) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame, dict]:
-    grid, study_box = build_h3_grid(args.center_lat, args.center_lon, args.box_km, args.h3_resolution)
+    box_km_ew, box_km_ns = box_dimensions(args)
+    grid, study_box = build_h3_grid(args.center_lat, args.center_lon, box_km_ew, box_km_ns, args.h3_resolution)
     territorial = load_territorial_layers()
     grid = add_state_and_exclusions(grid, territorial)
     grid = add_raster_features(grid)
@@ -279,7 +298,9 @@ def build_baseline(args: argparse.Namespace) -> tuple[gpd.GeoDataFrame, gpd.GeoD
         "case_study": "ceara_h3_phase1_baseline",
         "center_lat": args.center_lat,
         "center_lon": args.center_lon,
-        "box_km": args.box_km,
+        "box_km": box_km_ew if box_km_ew == box_km_ns else None,
+        "box_km_ew": box_km_ew,
+        "box_km_ns": box_km_ns,
         "h3_resolution": args.h3_resolution,
         "h3_cell_count": int(len(grid)),
         "hard_exclusion_cells": int(grid["hard_exclusion"].sum()),
@@ -305,7 +326,9 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Build Phase 1 H3 baseline for the Sovereign Compute Nexus case study.")
     parser.add_argument("--center-lat", type=float, default=-3.56, help="Case-study center latitude.")
     parser.add_argument("--center-lon", type=float, default=-38.82, help="Case-study center longitude.")
-    parser.add_argument("--box-km", type=float, default=50.0, help="Square case-study width/height in kilometers.")
+    parser.add_argument("--box-km", type=float, default=50.0, help="Square case-study width/height in kilometers; used when the two axis flags are omitted.")
+    parser.add_argument("--box-km-ew", type=float, default=None, help="East-west extent in kilometers; overrides --box-km.")
+    parser.add_argument("--box-km-ns", type=float, default=None, help="North-south extent in kilometers; overrides --box-km.")
     parser.add_argument("--h3-resolution", type=int, default=8, help="H3 resolution.")
     parser.add_argument("--renewable-radius-km", type=float, default=25.0, help="Radius for nearby renewable generation aggregation.")
     return parser.parse_args()
