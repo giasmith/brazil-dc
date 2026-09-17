@@ -103,7 +103,7 @@ var S = {
   dcSel: null,
   filter: "all",
   eps: 0.62, hv: 25, line: 15, idc: 50,
-  published: false,   // true = reproduce the pre-fix run (0 km read as missing); the corrected run is the default
+  published: false,   // kept for the solver's coerce() path; the pre-fix (0 km read as missing) mode is no longer exposed in the UI
   sel: null,
   natMetric: "score",
   natOverlays: {grid: true, buses: false, idc: false, gen: true, dc: true, protected: false, indigenous: false},
@@ -246,7 +246,7 @@ function mk(tag, attrs) {
   for (var k in attrs) e.setAttribute(k, attrs[k]);
   return e;
 }
-function applyVB() { svg.setAttribute("viewBox", VB.x + " " + VB.y + " " + VB.w + " " + VB.h); }
+function applyVB() { svg.setAttribute("viewBox", VB.x + " " + VB.y + " " + VB.w + " " + VB.h); sizeLabels(); }
 function setHome(x, y, w, h) {
   var r = wrap.getBoundingClientRect(), aspect = (r.width || 800) / (r.height || 500);
   var cw = w, ch = h;
@@ -283,6 +283,29 @@ function pick(e) {
   }
   return null;
 }
+/* every protected / indigenous boundary under the cursor (a point can sit inside several) */
+function boundariesAt(e) {
+  var out = [];
+  if (!document.elementsFromPoint) return out;
+  var list = document.elementsFromPoint(e.clientX, e.clientY);
+  for (var k = 0; k < list.length; k++) {
+    var n = list[k];
+    if (n.__nm) out.push(n);
+    if (n === svg) break;
+  }
+  return out;
+}
+function boundaryLines(bs) {
+  return bs.map(function (b) { return "<br><span class='k'>" + b.__kind + "</span> " + titleCase(b.__nm); }).join("");
+}
+function titleCase(s) {
+  var small = {"DE": 1, "DA": 1, "DO": 1, "DAS": 1, "DOS": 1, "E": 1};
+  return s.split(" ").map(function (w, i) {
+    if (!w) return w;
+    if (i > 0 && small[w]) return w.toLowerCase();
+    return w.charAt(0) + w.slice(1).toLowerCase();
+  }).join(" ");
+}
 function wasDrag(e) { return DOWN_AT != null && Math.hypot(e.clientX - DOWN_AT.x, e.clientY - DOWN_AT.y) > 6; }
 (function bindMap() {
   var dragging = false, last = null;
@@ -316,25 +339,38 @@ function hideTip() { tip.classList.remove("on"); }
 
 /* ------------------------------------------------------- ceara map drawing */
 var cellNodes = [];
+function landPath() {
+  // full-resolution Ceará state ring, in cell coordinates: the shoreline the cells are cut to
+  var d = "";
+  C.land.forEach(function (f) {
+    f.p.forEach(function (ring) {
+      d += "M" + ring.map(function (pt) { return Q(pt[0]).toFixed(0) + " " + R(pt[1]).toFixed(0); }).join("L") + "Z";
+    });
+  });
+  return d;
+}
 function drawCeara() {
   svg.innerHTML = "";
   cellNodes = [];
   var g = mk("g", {});
-  var gCells = mk("g", {}), gOv = mk("g", {"pointer-events": "none"});
-  g.appendChild(gCells); g.appendChild(gOv);
+  var gWater = mk("g", {"pointer-events": "none"}), gCells = mk("g", {"clip-path": "url(#landclip)"}),
+      gShore = mk("g", {"pointer-events": "none"}), gOv = mk("g", {"pointer-events": "none"});
+  g.appendChild(gWater); g.appendChild(gCells); g.appendChild(gShore); g.appendChild(gOv);
   svg.appendChild(g);
 
   for (var i = 0; i < C.n; i++) {
-    var p = mk("path", {d: CELL_PATH[i], "stroke-width": 6, "vector-effect": "non-scaling-stroke"});
+    var p = mk("path", {d: CELL_PATH[i], "stroke-width": 6, "vector-effect": "non-scaling-stroke", "fill-opacity": 0.65});
     p.__i = i;
     gCells.appendChild(p);
     cellNodes.push(p);
   }
-  function poly(list, stroke, fill, w) {
+  function poly(list, stroke, fill, w, kind) {
     list.forEach(function (f) {
       f.p.forEach(function (ring) {
         var d = "M" + ring.map(function (pt) { return Q(pt[0]) + " " + R(pt[1]); }).join("L") + "Z";
-        gOv.appendChild(mk("path", {d: d, fill: fill, stroke: stroke, "stroke-width": w, "vector-effect": "non-scaling-stroke"}));
+        var path = mk("path", {d: d, fill: fill, stroke: stroke, "stroke-width": w, "vector-effect": "non-scaling-stroke"});
+        if (kind) { path.__nm = f.nm; path.__kind = kind; path.style.pointerEvents = "visible"; }  // interior + stroke are hoverable
+        gOv.appendChild(path);
       });
     });
   }
@@ -348,14 +384,90 @@ function drawCeara() {
   CLIP = [minX - pad, minY - pad, (maxX - minX) + pad * 2, (maxY - minY) + pad * 2];
   var defs = mk("defs", {}), cp = mk("clipPath", {id: "boxclip"});
   cp.appendChild(mk("rect", {x: CLIP[0], y: CLIP[1], width: CLIP[2], height: CLIP[3]}));
-  defs.appendChild(cp); svg.appendChild(defs);
+  defs.appendChild(cp);
+  // shoreline clip: cells are cut exactly where the state boundary meets the sea
+  var lp = landPath(), lc = mk("clipPath", {id: "landclip"});
+  lc.appendChild(mk("path", {d: lp}));
+  defs.appendChild(lc);
+  svg.appendChild(defs);
   gOv.setAttribute("clip-path", "url(#boxclip)");
+  // sea under the cells, land tint under the cells, shoreline over them
+  gWater.appendChild(mk("rect", {x: CLIP[0] - 4000, y: CLIP[1] - 4000, width: CLIP[2] + 8000, height: CLIP[3] + 8000, fill: css("--water")}));
+  gWater.appendChild(mk("path", {d: lp, fill: css("--land")}));
+  gShore.appendChild(mk("path", {d: lp, fill: "none", stroke: css("--shore"), "stroke-width": 1.8, "stroke-linejoin": "round", "vector-effect": "non-scaling-stroke"}));
+  // municipalities: hairline boundaries plus a name at each one's label point (inside the box)
+  if (C.munis) {
+    var gM = mk("g", {"pointer-events": "none", "clip-path": "url(#boxclip)"});
+    C.munis.forEach(function (m) {
+      m.p.forEach(function (ring) {
+        var d = "M" + ring.map(function (pt) { return Q(pt[0]).toFixed(0) + " " + R(pt[1]).toFixed(0); }).join("L") + "Z";
+        gM.appendChild(mk("path", {d: d, fill: "none", stroke: css("--shore"), "stroke-opacity": 0.55, "stroke-width": 0.9, "stroke-dasharray": "3 3", "vector-effect": "non-scaling-stroke"}));
+      });
+    });
+    LABELS = [];
+    C.munis.forEach(function (m) {
+      var t = mk("text", {x: Q(m.lx), y: R(m.ly), "text-anchor": "middle", class: "muni"});
+      t.textContent = m.nm.toUpperCase();
+      t.__x = Q(m.lx); t.__y = R(m.ly);              // anchor; sizeLabels() may nudge the label inward from here
+      gM.appendChild(t); LABELS.push(t);
+    });
+    gShore.appendChild(gM);
+  }
   FIT = CLIP.slice(); setHome(CLIP[0], CLIP[1], CLIP[2], CLIP[3]);
+  drawInset();
+}
+/* labels keep a constant on-screen size: font-size is re-expressed in map units on every viewBox change */
+var LABELS = [];
+function sizeLabels() {
+  if (!LABELS.length) return;
+  var r = svg.getBoundingClientRect(); if (!r.width) return;
+  var upx = VB.w / r.width;                       // map units per CSS pixel
+  var fs = (11.5 * upx).toFixed(0), ls = (0.12 * 11.5 * upx).toFixed(0), sw = (3 * upx).toFixed(0);
+  var m = 8 * upx;                                  // keep this many screen pixels between a name and the box edge
+  LABELS.forEach(function (t) {
+    t.setAttribute("font-size", fs); t.setAttribute("letter-spacing", ls); t.setAttribute("stroke-width", sw);
+    // a name whose anchor sits near the box edge (Fortaleza, at the corner) would be cut by the clip: slide it inward
+    if (!CLIP) return;
+    t.setAttribute("x", t.__x); t.setAttribute("y", t.__y);
+    var bb; try { bb = t.getBBox(); } catch (e) { return; }   // throws while the view is display:none
+    if (!bb || !bb.width) return;
+    var x1 = CLIP[0] + m, x2 = CLIP[0] + CLIP[2] - m, y1 = CLIP[1] + m, y2 = CLIP[1] + CLIP[3] - m, dx = 0, dy = 0;
+    if (bb.x < x1) dx = x1 - bb.x; else if (bb.x + bb.width > x2) dx = x2 - (bb.x + bb.width);
+    if (bb.y < y1) dy = y1 - bb.y; else if (bb.y + bb.height > y2) dy = y2 - (bb.y + bb.height);
+    if (dx || dy) { t.setAttribute("x", t.__x + dx); t.setAttribute("y", t.__y + dy); }
+  });
+}
 
+/* ------------------------------------------------------ locator inset */
+function drawInset() {
+  var box = document.getElementById("inset"); if (!box) return;
+  box.innerHTML = "";
+  var W = 150, H = 150, pad = 5;
+  var lons = [], lats = [];
+  N.outline.forEach(function (f) { f.p.forEach(function (r) { r.forEach(function (pt) { lons.push(pt[0]); lats.push(pt[1]); }); }); });
+  var minLon = Math.min.apply(null, lons), maxLon = Math.max.apply(null, lons), minLat = Math.min.apply(null, lats), maxLat = Math.max.apply(null, lats);
+  var kx = (W - 2 * pad) / (maxLon - minLon), ky = (H - 2 * pad) / (maxLat - minLat), k = Math.min(kx, ky);
+  var ox = pad + ((W - 2 * pad) - (maxLon - minLon) * k) / 2, oy = pad + ((H - 2 * pad) - (maxLat - minLat) * k) / 2;
+  var X = function (lon) { return ox + (lon - minLon) * k; }, Y = function (lat) { return oy + (maxLat - lat) * k; };
+  var sv = mk("svg", {viewBox: "0 0 " + W + " " + H, width: W, height: H, role: "img", "aria-label": "Location of the study box within Brazil"});
+  N.outline.forEach(function (f) {
+    f.p.forEach(function (r) {
+      var d = "M" + r.map(function (pt) { return X(pt[0]).toFixed(1) + " " + Y(pt[1]).toFixed(1); }).join("L") + "Z";
+      sv.appendChild(mk("path", {d: d, fill: f.ab === "CE" ? css("--accent-soft") : css("--sunk"), stroke: f.ab === "CE" ? css("--accent") : css("--hair"), "stroke-width": f.ab === "CE" ? 1 : 0.5}));
+    });
+  });
+  // the 50 km box is ~1% of Brazil's width; draw it at a minimum legible size, centered on the true location
+  var bx = C.box.map(function (pt) { return X(pt[0]); }), by = C.box.map(function (pt) { return Y(pt[1]); });
+  var cx = (Math.min.apply(null, bx) + Math.max.apply(null, bx)) / 2, cy = (Math.min.apply(null, by) + Math.max.apply(null, by)) / 2;
+  var sz = Math.max(9, Math.max.apply(null, bx) - Math.min.apply(null, bx));
+  sv.appendChild(mk("rect", {x: cx - sz / 2, y: cy - sz / 2, width: sz, height: sz, fill: "none", stroke: SELECTED, "stroke-width": 1.6}));
+  sv.appendChild(mk("circle", {cx: cx, cy: cy, r: 1.6, fill: SELECTED}));
+  box.appendChild(sv);
+  box.appendChild(el("div", {class: "cap", html: "<b>Ceará</b> · 50 × 50 km study box"}));
 }
 
 function ceMove(e) {
-    var t = pick(e);
+    var t = pick(e), bs = boundariesAt(e);
     if (t && t.__dc != null) { showTip(e, dcTip(t.__dc)); return; }
     if (t && t.__i != null && cellVisible(t.__i)) {
       var i = t.__i;
@@ -363,7 +475,9 @@ function ceMove(e) {
         "<span class='k'>P<sub>deg</sub></span> <span class='mono'>" + C.pdeg[i].toFixed(3) + "</span> · " +
         "<span class='k'>policy</span> " + C.stringVals[C.string[i]] + "<br>" +
         "<span class='k'>line</span> <span class='mono'>" + C.lineKm[i].toFixed(2) + " km</span> · " +
-        "<span class='k'>fiber</span> <span class='mono'>" + C.idcKm[i].toFixed(1) + " km</span>");
+        "<span class='k'>fiber</span> <span class='mono'>" + C.idcKm[i].toFixed(1) + " km</span>" + boundaryLines(bs));
+    } else if (bs.length) {
+      showTip(e, "<b>" + titleCase(bs[0].__nm) + "</b><span class='k'>" + bs[0].__kind + "</span>" + boundaryLines(bs.slice(1)));
     } else hideTip();
 }
 function ceClick(e) {
@@ -392,8 +506,8 @@ function paintCeara() {
   }
   // overlays
   OVER.gOv.innerHTML = "";
-  if (S.overlays.protected) OVER.poly(C.protected, CAT.aqua, "none", 1.6);
-  if (S.overlays.indigenous) OVER.poly(C.indigenous, CAT.orange, "none", 1.6);
+  if (S.overlays.protected) OVER.poly(C.protected, CAT.aqua, "none", 1.6, "Conservation unit");
+  if (S.overlays.indigenous) OVER.poly(C.indigenous, CAT.orange, "none", 1.6, "Indigenous land");
   if (S.overlays.box) {
     var d = "M" + C.box.map(function (pt) { return Q(pt[0]) + " " + R(pt[1]); }).join("L") + "Z";
     OVER.gOv.appendChild(mk("path", {d: d, fill: "none", stroke: css("--ink2"), "stroke-width": 1.2, "stroke-dasharray": "7 5", "vector-effect": "non-scaling-stroke"}));
@@ -752,14 +866,6 @@ function renderLeft() {
     gt.appendChild(br);
     rail.appendChild(gt);
 
-    var gb = el("div", {class: "group"});
-    gb.appendChild(el("div", {class: "eyebrow", text: "Corrected defect"}));
-    gb.appendChild(check("bugFix", "Reproduce the pre-fix run", "Read a cell sitting exactly on a line as infinitely far, as the May 2026 run did", S.published, function (v) {
-      S.published = v; refreshModel();
-    }));
-    gb.appendChild(el("div", {class: "callout", html: "Until September 17, 2026, Phase 4 read a distance of exactly <b>0 km</b> as <b>missing</b>, so <b>147 cells sitting directly on a transmission line</b> were excluded for being too far from one. The fix is now applied: 966 feasible, 505 on the frontier, top score <b>74.33</b>. Check the box to reproduce the pre-fix result (819 · 448 · 73.52)."}));
-    rail.appendChild(gb);
-
   } else {
     var gm = el("div", {class: "group"});
     gm.appendChild(el("div", {class: "eyebrow", text: "Color states by"}));
@@ -857,8 +963,7 @@ function renderRight() {
     counts.appendChild(countTile(fmt(rev), "of those need review"));
     g1.appendChild(counts);
     var pct = (RESULT.feasible.length / C.n * 100).toFixed(1);
-    g1.appendChild(el("p", {class: "hint", html: pct + "% of the 2,808-cell grid survives. " +
-      (S.published ? "Pre-fix run, as published in May 2026." : "Corrected run (0 km fix applied).")}));
+    g1.appendChild(el("p", {class: "hint", html: pct + "% of the 2,808-cell grid survives."}));
     rail.appendChild(g1);
 
     var g2 = el("div", {class: "group"});
@@ -1086,7 +1191,9 @@ function setView(v) {
     ? "2,808 H3 cells · 50 km × 50 km box"
     : "27 states · 1,705 substations · 336 data centers";
   hideTip();
+  var inset = document.getElementById("inset"); if (inset) inset.hidden = v !== "ceara";
   renderLeft(); renderRight();
+  LABELS = [];
   if (v === "ceara") { drawCeara(); paintCeara(); } else { drawNational(); paintNational(); }
   requestAnimationFrame(function () { refit(); });
 }

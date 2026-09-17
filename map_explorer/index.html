@@ -19,6 +19,7 @@
   --accent:#4a3aa7; --accent-soft:#ece9f8; --accent-ink:#4a3aa7;
   --warn-bg:#fdf4e6; --warn-line:#c98500; --warn-ink:#8a5a00;
   --map-bg:#f8fafb; --neutral:#d9dee5; --outline:#aab4c0;
+  --water:#dfe9f2; --land:#eceee9; --shore:#2b3a4a;
   --shadow:0 1px 2px rgba(17,21,27,.06),0 4px 14px rgba(17,21,27,.05);
 }
 @media (prefers-color-scheme:dark){
@@ -28,6 +29,7 @@
     --accent:#9085e9; --accent-soft:#252041; --accent-ink:#b4abf2;
     --warn-bg:#2a2113; --warn-line:#c98500; --warn-ink:#e0a94a;
     --map-bg:#11161c; --neutral:#2c3540; --outline:#4a5665;
+    --water:#0f1a26; --land:#1c2128; --shore:#c9d6e3;
     --shadow:0 1px 2px rgba(0,0,0,.4),0 4px 14px rgba(0,0,0,.3);
   }
 }
@@ -37,6 +39,7 @@
   --accent:#9085e9; --accent-soft:#252041; --accent-ink:#b4abf2;
   --warn-bg:#2a2113; --warn-line:#c98500; --warn-ink:#e0a94a;
   --map-bg:#11161c; --neutral:#2c3540; --outline:#4a5665;
+  --water:#0f1a26; --land:#1c2128; --shore:#c9d6e3;
   --shadow:0 1px 2px rgba(0,0,0,.4),0 4px 14px rgba(0,0,0,.3);
 }
 
@@ -145,6 +148,16 @@ button,input,select{font:inherit;color:inherit}
 svg.map{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:grab;touch-action:none}
 svg.map.drag{cursor:grabbing}
 .zoomer{position:absolute;right:12px;bottom:12px;display:flex;flex-direction:column;gap:4px}
+.inset{
+  position:absolute;right:12px;top:12px;z-index:4;background:var(--surface);border:1px solid var(--hair);border-radius:7px;
+  box-shadow:var(--shadow);padding:6px 6px 5px;display:flex;flex-direction:column;align-items:center;gap:2px;
+}
+.inset svg{display:block}
+.inset .cap{font-size:10.5px;color:var(--muted);line-height:1.2;text-align:center}
+.inset .cap b{color:var(--ink);font-weight:600}
+@media (max-width:520px){.inset{transform:scale(.75);transform-origin:top right}}
+/* municipality names on the Ceará map: halo in the map background so they read over any cell color */
+text.muni{font-family:"IBM Plex Sans Condensed","IBM Plex Sans",sans-serif;font-weight:600;fill:var(--ink);stroke:var(--map-bg);stroke-linejoin:round;paint-order:stroke fill;opacity:.92}
 .zoomer button{
   width:30px;height:30px;border-radius:6px;border:1px solid var(--hair);
   background:var(--surface);color:var(--ink2);cursor:pointer;font-size:15px;line-height:1;box-shadow:var(--shadow);
@@ -235,6 +248,7 @@ img{max-width:100%}
       <div class="mapwrap" id="mapwrap">
         <svg class="map" id="svg" role="img" aria-label="Map"></svg>
         <div class="tip" id="tip" aria-hidden="true"></div>
+        <div class="inset" id="inset" aria-label="Locator map"></div>
         <div class="zoomer">
           <button id="zin" title="Zoom in" aria-label="Zoom in">+</button>
           <button id="zout" title="Zoom out" aria-label="Zoom out">−</button>
@@ -254,7 +268,7 @@ img{max-width:100%}
 
 
 
-<script src="data.js?v=6"></script>
-<script src="app.js?v=8"></script>
+<script src="data.js?v=7"></script>
+<script src="app.js?v=9"></script>
 </body>
 </html>

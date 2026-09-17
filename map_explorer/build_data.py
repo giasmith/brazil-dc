@@ -185,6 +185,8 @@ national = {
 ceara["protected"] = json.load(open(f"{OUT}/data/protected_ceara.json"))
 ceara["indigenous"] = json.load(open(f"{OUT}/data/indigenous_ceara.json"))
 ceara["outline"] = json.load(open(f"{OUT}/data/ceara_outline.json"))
+ceara["land"] = json.load(open(f"{OUT}/data/ceara_land.json"))
+ceara["munis"] = json.load(open(f"{OUT}/data/ceara_munis.json"))     # municipalities inside the box, with a label point inside each one       # full-resolution state ring: the shoreline clip for the case-study map
 ceara["box"] = json.load(open(f"{UP}/clean_data/sovereign_compute_nexus/ceara_case_study_box.geojson"))["features"][0]["geometry"]["coordinates"][0]
 
 
