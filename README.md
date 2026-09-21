@@ -1,10 +1,12 @@
 # Brazil Sovereign Compute Nexus Pipeline
 
-Last updated: 2026-09-17
+Last updated: 2026-09-21
 
 This repository is now a geospatial energy, data-center, and socio-ecological siting pipeline for Brazil. It started as a cleaned Global Energy Monitor style energy dataset, but the recent work expanded it into a reproducible research stack for the **Sovereign Compute Nexus** framework: a policy-aware digital twin that tests where hyperscale data-center infrastructure can be sited without violating power-grid, water, land-cover, protected-land, or indigenous-territory constraints.
 
-The key idea is simple: every physical, environmental, and policy layer is harmonized into spatial decision units, then hard constraints are applied before optimization. Cheap power is not allowed to override protected land, indigenous land, water risk, or high degradation risk.
+The key idea: every physical, environmental, and policy layer is harmonized into spatial decision units, then hard constraints are applied before optimization. Cheap power is not allowed to override protected land, indigenous land, water risk, or high degradation risk.
+
+AI-use disclosure: Claude Code assisted with implementation scaffolding, refactoring, debugging, and documentation. Gia Smith defined the research question, data architecture, geospatial methodology, policy constraints, optimization formulation, validation criteria, and interpretation, and reviewed the resulting code and outputs.
 
 ## What is in this repository
 
