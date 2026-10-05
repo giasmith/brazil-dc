@@ -831,6 +831,27 @@ function slider(id, label, min, max, step, val, unit, onchange) {
   return w;
 }
 
+/* collapsible rail section: header with a chevron and a one-line summary when closed */
+S.open = S.open || {model: true, infra: false, overlays: false, thresholds: false, natColor: true, natOverlays: false, ranking: false};
+function section(key, title, summary) {
+  var open = !!S.open[key];
+  var g = el("div", {class: "group sect" + (open ? " open" : "")});
+  var h = el("button", {class: "secthead", type: "button", "aria-expanded": open ? "true" : "false"});
+  h.appendChild(el("span", {class: "eyebrow", text: title}));
+  if (summary && !open) h.appendChild(el("span", {class: "sectsum", text: summary}));
+  h.appendChild(el("span", {class: "chev", "aria-hidden": "true", text: "▾"}));
+  h.addEventListener("click", function () { S.open[key] = !S.open[key]; renderLeft(); });
+  var body = el("div", {class: "sectbody"});
+  g.appendChild(h); g.appendChild(body);
+  return {g: g, body: body};
+}
+function subgroup(visible, nodes) {
+  var d = el("div", {class: "subgroup", style: visible ? "" : "display:none"});
+  nodes.forEach(function (n) { d.appendChild(n); });
+  return d;
+}
+function layerName(id) { var l = LAYERS.filter(function (x) { return x.id === id; })[0]; return l ? l.name : id; }
+
 function renderLeft() {
   var rail = document.getElementById("railLeft");
   rail.innerHTML = "";
@@ -839,41 +860,47 @@ function renderLeft() {
   if (S.view === "ceara") {
     var groups = {};
     LAYERS.forEach(function (l) { (groups[l.group] = groups[l.group] || []).push(l); });
+    var keyOf = {"Model output": "model", "Infrastructure": "infra"};
     Object.keys(groups).forEach(function (gname) {
-      var g = el("div", {class: "group"});
-      g.appendChild(el("div", {class: "eyebrow", text: gname}));
+      var inGroup = groups[gname].some(function (l) { return l.id === S.layer; });
+      var sec = section(keyOf[gname] || gname, gname, inGroup ? layerName(S.layer) : "");
       groups[gname].forEach(function (l) {
-        g.appendChild(radio("layer", l.id, l.name, l.note, S.layer === l.id, function (id) {
-          S.layer = id; paintCeara(); renderRight();
+        sec.body.appendChild(radio("layer", l.id, l.name, l.note, S.layer === l.id, function (id) {
+          S.layer = id; paintCeara(); renderRight(); renderLeft();
         }, HELP[l.id] ? l.id : null));
       });
-      rail.appendChild(g);
+      rail.appendChild(sec.g);
     });
 
+    // "Show only" as a drop-down
+    var FILTERS = [["all", "Every cell", "All 4,633"], ["feasible", "Feasible cells", "Pass every hard constraint"],
+     ["frontier", "Pareto frontier", "Best on at least one objective, worse on others"],
+     ["shortlist", "Recommended shortlist", "Top 25 by resilience score"]];
     var gf = el("div", {class: "group"});
     gf.appendChild(el("div", {class: "eyebrow", text: "Show only"}));
-    [["all", "Every cell", "All 4,633"], ["feasible", "Feasible cells", "Pass every hard constraint"],
-     ["frontier", "Pareto frontier", "Nothing beats them on all six objectives"],
-     ["shortlist", "Recommended shortlist", "Top 25 by resilience score"]].forEach(function (f) {
-      gf.appendChild(radio("filter", f[0], f[1], f[2], S.filter === f[0], function (id) {
-        S.filter = id; paintCeara(); renderRight();
-      }));
+    var sel = el("select", {class: "sel", id: "filterSel", "aria-label": "Show only"});
+    FILTERS.forEach(function (f) { var o = el("option", {value: f[0], text: f[1]}); if (S.filter === f[0]) o.selected = true; sel.appendChild(o); });
+    var selNote = el("p", {class: "hint", style: "margin:0", text: (FILTERS.filter(function (f) { return f[0] === S.filter; })[0] || FILTERS[0])[2]});
+    sel.addEventListener("change", function () {
+      S.filter = sel.value; paintCeara(); renderRight();
+      selNote.textContent = (FILTERS.filter(function (f) { return f[0] === S.filter; })[0] || FILTERS[0])[2];
     });
+    gf.appendChild(sel); gf.appendChild(selNote);
     rail.appendChild(gf);
 
-    var go = el("div", {class: "group"});
-    go.appendChild(el("div", {class: "eyebrow", text: "Overlays"}));
-    go.appendChild(check("ovProt", "Protected areas", "Conservation units", S.overlays.protected, function (v) { S.overlays.protected = v; paintCeara(); }));
-    go.appendChild(check("ovIndi", "Indigenous land", "Demarcated territories", S.overlays.indigenous, function (v) { S.overlays.indigenous = v; paintCeara(); }));
-    go.appendChild(check("ovBox", "Study box", "75 km × 55 km", S.overlays.box, function (v) { S.overlays.box = v; paintCeara(); }));
-    go.appendChild(check("ovGen", "Power plants", "Colored by generation type", S.overlays.gen, function (v) { S.overlays.gen = v; paintCeara(); renderRight(); }));
-    statusChecks("ovGenSt", S.genStatus, function () { paintCeara(); renderRight(); }).forEach(function (n) { go.appendChild(n); });
-    go.appendChild(check("ovDc", "Data centers — curated list", "Fortaleza facilities, now inside the box", S.overlays.dc, function (v) { S.overlays.dc = v; paintCeara(); renderRight(); }));
-    statusChecks("ovDcSt", S.dcStatus, function () { paintCeara(); renderRight(); }).forEach(function (n) { go.appendChild(n); });
-    rail.appendChild(go);
+    var onCount = ["protected", "indigenous", "box", "gen", "dc"].filter(function (k) { return S.overlays[k]; }).length;
+    var go = section("overlays", "Overlays", onCount + " of 5 on");
+    go.body.appendChild(check("ovProt", "Protected areas", "Conservation units", S.overlays.protected, function (v) { S.overlays.protected = v; paintCeara(); }));
+    go.body.appendChild(check("ovIndi", "Indigenous land", "Demarcated territories", S.overlays.indigenous, function (v) { S.overlays.indigenous = v; paintCeara(); }));
+    go.body.appendChild(check("ovBox", "Study box", "75 km × 55 km", S.overlays.box, function (v) { S.overlays.box = v; paintCeara(); }));
+    go.body.appendChild(check("ovGen", "Power plants", "Colored by generation type", S.overlays.gen, function (v) { S.overlays.gen = v; paintCeara(); renderRight(); renderLeft(); }));
+    go.body.appendChild(subgroup(S.overlays.gen, statusChecks("ovGenSt", S.genStatus, function () { paintCeara(); renderRight(); })));
+    go.body.appendChild(check("ovDc", "Data centers — curated list", "Facilities with status, MW and case files", S.overlays.dc, function (v) { S.overlays.dc = v; paintCeara(); renderRight(); renderLeft(); }));
+    go.body.appendChild(subgroup(S.overlays.dc, statusChecks("ovDcSt", S.dcStatus, function () { paintCeara(); renderRight(); })));
+    rail.appendChild(go.g);
 
-    var gt = el("div", {class: "group"});
-    gt.appendChild(el("div", {class: "eyebrow", text: "Move the thresholds"}));
+    var gtS = section("thresholds", "Move the thresholds", "ε " + S.eps + " · " + S.hv + " / " + S.line + " / " + S.idc + " km");
+    var gt = gtS.body;
     gt.appendChild(el("p", {class: "hint", text: "Every cell is re-tested and the frontier re-sorted as you drag."}));
     gt.appendChild(slider("sEps", "Degradation cap &epsilon;", 0.2, 1, 0.01, S.eps, "", function (v) { S.eps = v; refreshModel(); }));
     gt.appendChild(slider("sHv", "Max distance to HV bus", 1, 60, 1, S.hv, " km", function (v) { S.hv = v; refreshModel(); }));
@@ -887,33 +914,34 @@ function renderLeft() {
     };
     br.appendChild(reset);
     gt.appendChild(br);
-    rail.appendChild(gt);
+    rail.appendChild(gtS.g);
 
   } else {
-    var gm = el("div", {class: "group"});
-    gm.appendChild(el("div", {class: "eyebrow", text: "Color states by"}));
+    var cur = NAT_METRICS.filter(function (m) { return m.id === S.natMetric; })[0];
+    var gmS = section("natColor", "Color states by", cur ? cur.name : "");
     NAT_METRICS.forEach(function (m) {
-      gm.appendChild(radio("nat", m.id, m.name, m.note, S.natMetric === m.id, function (id) {
-        S.natMetric = id; paintNational(); renderRight();
+      gmS.body.appendChild(radio("nat", m.id, m.name, m.note, S.natMetric === m.id, function (id) {
+        S.natMetric = id; paintNational(); renderRight(); renderLeft();
       }));
     });
-    rail.appendChild(gm);
+    rail.appendChild(gmS.g);
 
-    var gno = el("div", {class: "group"});
-    gno.appendChild(el("div", {class: "eyebrow", text: "Overlays"}));
+    var nOn = Object.keys(S.natOverlays).filter(function (k) { return S.natOverlays[k]; }).length;
+    var gnoS = section("natOverlays", "Overlays", nOn + " of " + Object.keys(S.natOverlays).length + " on");
+    var gno = gnoS.body;
     gno.appendChild(check("nGrid", "Transmission network", "1,838 ONS lines", S.natOverlays.grid, function (v) { S.natOverlays.grid = v; paintNational(); renderRight(); }));
     gno.appendChild(check("nBus", "Substations", "1,705 ONS buses", S.natOverlays.buses, function (v) { S.natOverlays.buses = v; paintNational(); renderRight(); }));
-    gno.appendChild(check("nDc", "Data centers — curated list", (N.dc ? N.dc.nm.length : 0) + " facilities with status, MW and cooling notes", S.natOverlays.dc, function (v) { S.natOverlays.dc = v; paintNational(); renderRight(); }));
-    statusChecks("nDcSt", S.dcStatus, function () { paintNational(); renderRight(); }).forEach(function (n) { gno.appendChild(n); });
-    gno.appendChild(check("nGen", "Power plants", "Colored by generation type", S.natOverlays.gen, function (v) { S.natOverlays.gen = v; paintNational(); renderRight(); }));
-    statusChecks("nGenSt", S.genStatus, function () { paintNational(); renderRight(); }).forEach(function (n) { gno.appendChild(n); });
+    gno.appendChild(check("nDc", "Data centers — curated list", (N.dc ? N.dc.nm.length : 0) + " facilities with status, MW and cooling notes", S.natOverlays.dc, function (v) { S.natOverlays.dc = v; paintNational(); renderRight(); renderLeft(); }));
+    gno.appendChild(subgroup(S.natOverlays.dc, statusChecks("nDcSt", S.dcStatus, function () { paintNational(); renderRight(); })));
+    gno.appendChild(check("nGen", "Power plants", "Colored by generation type", S.natOverlays.gen, function (v) { S.natOverlays.gen = v; paintNational(); renderRight(); renderLeft(); }));
+    gno.appendChild(subgroup(S.natOverlays.gen, statusChecks("nGenSt", S.genStatus, function () { paintNational(); renderRight(); })));
     gno.appendChild(check("nIdc", "Fiber anchors · PeeringDB + OSM", "The 336 points the model measures distance to", S.natOverlays.idc, function (v) { S.natOverlays.idc = v; paintNational(); renderRight(); }));
     gno.appendChild(check("nProt", "Protected areas", "Largest conservation units", S.natOverlays.protected, function (v) { S.natOverlays.protected = v; paintNational(); renderRight(); }));
     gno.appendChild(check("nIndi", "Indigenous land", "Largest demarcated territories", S.natOverlays.indigenous, function (v) { S.natOverlays.indigenous = v; paintNational(); renderRight(); }));
-    rail.appendChild(gno);
+    rail.appendChild(gnoS.g);
 
-    var gr = el("div", {class: "group"});
-    gr.appendChild(el("div", {class: "eyebrow", text: "Ranking"}));
+    var grS = section("ranking", "Ranking", "top 10 states");
+    var gr = grS.body;
     var list = el("div", {});
     N.states.slice(0, 10).forEach(function (s) {
       var row = el("button", {class: "opt", style: "width:100%;text-align:left;border:0;background:none;cursor:pointer"});
@@ -923,7 +951,7 @@ function renderLeft() {
       list.appendChild(row);
     });
     gr.appendChild(list);
-    rail.appendChild(gr);
+    rail.appendChild(grS.g);
   }
 }
 
@@ -1183,6 +1211,34 @@ function policyExplanation(i) {
   return wrap;
 }
 
+/* coordinate header: decimal degrees in "lat, lon" order (what Google Maps, OSM and QGIS accept), one-click copy, map links */
+function coordHead(lat, lon, sub) {
+  var txt = lat.toFixed(5) + ", " + lon.toFixed(5);
+  var wrap = el("div", {class: "coord"});
+  var row = el("div", {class: "coordrow"});
+  row.appendChild(el("span", {class: "t mono coordtxt", text: txt, title: "latitude, longitude (WGS 84)"}));
+  var btn = el("button", {class: "copybtn", type: "button", title: "Copy coordinates", "aria-label": "Copy coordinates", text: "copy"});
+  btn.addEventListener("click", function (e) {
+    e.stopPropagation();
+    var done = function () { btn.textContent = "copied"; setTimeout(function () { btn.textContent = "copy"; }, 1400); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(done, function () { fallbackCopy(txt); done(); });
+    else { fallbackCopy(txt); done(); }
+  });
+  row.appendChild(btn);
+  wrap.appendChild(row);
+  var links = el("div", {class: "s coordlinks"});
+  links.appendChild(el("a", {href: "https://www.google.com/maps?q=" + lat.toFixed(5) + "," + lon.toFixed(5), target: "_blank", rel: "noopener", text: "Google Maps"}));
+  links.appendChild(document.createTextNode(" · "));
+  links.appendChild(el("a", {href: "https://www.openstreetmap.org/?mlat=" + lat.toFixed(5) + "&mlon=" + lon.toFixed(5) + "#map=15/" + lat.toFixed(5) + "/" + lon.toFixed(5), target: "_blank", rel: "noopener", text: "OpenStreetMap"}));
+  if (sub) { links.appendChild(document.createTextNode(" · ")); links.appendChild(el("span", {class: "mono", text: sub, title: "H3 cell id (resolution 8)"})); }
+  wrap.appendChild(links);
+  return wrap;
+}
+function fallbackCopy(txt) {
+  var ta = document.createElement("textarea"); ta.value = txt; ta.setAttribute("readonly", ""); ta.style.position = "fixed"; ta.style.opacity = "0";
+  document.body.appendChild(ta); ta.select(); try { document.execCommand("copy"); } catch (e) {} document.body.removeChild(ta);
+}
+
 function num3(v) { return v == null ? "—" : v.toFixed(3); }
 /* one bar per objective: where the cell sits between the frontier's best (left) and worst (right) value */
 function objectiveProfile(i) {
@@ -1225,15 +1281,16 @@ function cellRecord() {
   var stc = st === "Low" ? STAT.good : st === "Medium" ? STAT.warn : STAT.crit;
   var rank = RESULT.shortlist.indexOf(i);
 
-  box.appendChild(el("div", {class: "rh", html:
-    "<div class='t mono'>" + C.h3[i] + "</div>" +
-    "<div class='s'>" + Math.abs(C.lat[i]).toFixed(4) + "°S, " + Math.abs(C.lon[i]).toFixed(4) + "°W</div>" +
+  var rh = el("div", {class: "rh"});
+  rh.appendChild(coordHead(C.lat[i], C.lon[i], "H3 " + C.h3[i]));
+  rh.appendChild(el("div", {html:
     "<div style='margin-top:6px;display:flex;gap:5px;flex-wrap:wrap'>" +
       pill(status[0] + (rank >= 0 ? " #" + (rank + 1) : ""), status[1], status[1] + "1a") +
       pill(st + " stringency", stc, stc + "1a") +
       (C.review[i] ? pill("needs human review", css("--warn-line"), css("--warn-bg")) : "") +
       (RESULT.isFront[i] && C.tt[i] >= 0 ? pill(C.ttMeta[C.tt[i]].name, TT_COLORS[C.tt[i] % TT_COLORS.length], TT_COLORS[C.tt[i] % TT_COLORS.length] + "1a") : "") +
     "</div>"}));
+  box.appendChild(rh);
 
   var dl = el("dl", {});
   if (!RESULT.isFeas[i]) {
@@ -1274,17 +1331,19 @@ function dcRecord(i) {
   var precTxt = d.prec[i] === "exact" ? "" : d.prec[i] === "city" ? "location approximate — city centroid" : "location approximate — state only";
   var mwTxt = d.mw[i] == null ? "<span style='font-family:inherit'>" + d.mwNote[i] + "</span>"
             : (d.mwNote[i] ? "<span style='font-family:inherit'>" + d.mwNote[i] + " </span>" : "") + fmt(d.mw[i]) + " MW";
-  box.appendChild(el("div", {class: "rh", html:
-    "<div class='t'>" + d.nm[i] + "</div>" +
-    "<div class='s'>" + d.city[i] + (d.st[i] && d.city[i].indexOf(d.st[i]) < 0 ? " · " + d.st[i] : "") + "</div>" +
+  var rh = el("div", {class: "rh"});
+  rh.appendChild(el("div", {class: "t", text: d.nm[i]}));
+  rh.appendChild(el("div", {class: "s", text: d.city[i] + (d.st[i] && d.city[i].indexOf(d.st[i]) < 0 ? " · " + d.st[i] : "")}));
+  rh.appendChild(coordHead(d.lat[i], d.lon[i], d.prec[i] === "exact" ? null : "approximate: " + (d.prec[i] === "city" ? "city centroid" : "state seat")));
+  rh.appendChild(el("div", {html:
     "<div style='margin-top:6px;display:flex;gap:5px;flex-wrap:wrap'>" +
       pill(DC_STATUS[d.status[i]], stc, stc + "1a") +
       (precTxt ? pill(precTxt, css("--warn-line"), css("--warn-bg")) : "") +
     "</div>"}));
+  box.appendChild(rh);
   var dl = el("dl", {});
   dl.appendChild(kv("Capacity", mwTxt));
   dl.appendChild(kv("Status, as listed", "<span style='font-family:inherit'>" + d.statusRaw[i] + "</span>"));
-  dl.appendChild(kv("Coordinates", Math.abs(d.lat[i]).toFixed(3) + "°S, " + Math.abs(d.lon[i]).toFixed(3) + "°W"));
   dl.appendChild(el("div", {class: "sec eyebrow", text: "Cooling & metrics"}));
   dl.appendChild(el("div", {class: "kv", html: "<dd style='text-align:left;font-family:inherit;margin:0'>" + (d.notes[i] || "—") + "</dd>"}));
   var c = caseOf(i);

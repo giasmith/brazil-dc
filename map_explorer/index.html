@@ -87,6 +87,17 @@ button,input,select{font:inherit;color:inherit}
 
 .group{display:flex;flex-direction:column;gap:9px}
 .group>.eyebrow{margin-bottom:-2px}
+/* collapsible rail sections */
+.sect{gap:0}
+.secthead{display:flex;align-items:center;gap:8px;width:100%;background:none;border:0;padding:4px 0;cursor:pointer;text-align:left;color:inherit;font:inherit}
+.secthead .eyebrow{margin:0}
+.sectsum{font-size:11px;color:var(--muted);margin-left:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.chev{margin-left:auto;color:var(--muted);font-size:12px;transition:transform .15s;transform:rotate(-90deg)}
+.sect.open .chev{transform:rotate(0)}
+.sectbody{display:none}
+.sect.open .sectbody{display:flex;flex-direction:column;gap:9px;padding-top:6px}
+.subgroup{display:flex;flex-direction:column;gap:2px;margin:-4px 0 2px}
+.sel{width:100%;font:inherit;font-size:13px;padding:6px 8px;border:1px solid var(--hair);border-radius:6px;background:var(--surface);color:var(--ink)}
 .hint{font-size:11.5px;color:var(--muted);margin:0}
 
 .opt{display:flex;align-items:flex-start;gap:8px;cursor:pointer;padding:4px 6px;border-radius:5px;margin:0 -6px}
@@ -218,6 +229,14 @@ text.muni{font-family:"IBM Plex Sans Condensed","IBM Plex Sans",sans-serif;font-
 .pfill{height:100%;background:var(--accent);border-radius:4px}
 .pval{text-align:right;font-size:11px}
 .ptag{font-size:10.5px;color:var(--muted)}
+.coord{margin:2px 0 2px}
+.coordrow{display:flex;align-items:center;gap:8px}
+.coordtxt{font-size:14px;font-weight:600;letter-spacing:.01em;user-select:all;cursor:text}
+.copybtn{border:1px solid var(--hair);background:var(--surface);color:var(--muted);border-radius:5px;font-size:10.5px;padding:1px 7px;cursor:pointer}
+.copybtn:hover{color:var(--ink);border-color:var(--ink2)}
+.coordlinks{margin-top:3px}
+.coordlinks a{color:var(--accent-ink);text-decoration:none}
+.coordlinks a:hover{text-decoration:underline}
 .dock .record .mono{word-break:break-all}
 .dock .record dl{column-gap:34px}
 @media (max-width:1100px){.dock .record{grid-template-columns:1fr}.dock .record .rh{border-right:0;border-bottom:1px solid var(--hair2)}.dock .record dl{column-count:1}}
