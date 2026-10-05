@@ -43,6 +43,7 @@ def enc(key):
 
 lulc_vals, lulc_idx = enc("class_name")
 nc_layer_vals, nc_layer_idx = enc("nearest_constraint_layer")
+np_vals, np_idx = enc("nearest_operating_plant_name")
 cite_vals, cite_idx = enc("policy_citation_ids")
 
 # The phase-2 join wrote "Unnamed feature" for every conservation unit (the name lives in nome_uc).
@@ -100,6 +101,14 @@ ceara = {
     "fsor": col("fsor_allowed_phase3", lambda v: 1 if v else 0),
     "review": col("human_review_required", lambda v: 1 if v else 0),
     # Phase 3 explainability: nearest legal constraint and the evidence tags behind the stringency class
+    # occupancy and status-split renewables (Phase 1/4, 2026-10-05); absent in older runs -> None/0
+    "occ": col("occupied_by_generation", lambda v: 1 if v else 0),
+    "npKm": col("nearest_operating_plant_km", r(2)),
+    "npMw": col("nearest_operating_plant_mw", r(1)),
+    "npVals": np_vals, "npName": np_idx,
+    "renOp": col("nearby_renewable_mw_operating", r(1)),
+    "renPro": col("nearby_renewable_mw_proposed", r(1)),
+    "renEff": col("nearby_renewable_mw_effective", r(1)),
     "ncKm": col("nearest_constraint_km", r(2)),
     "ncVals": nc_layer_vals, "ncLayer": nc_layer_idx,
     "ncNameVals": nc_name_vals, "ncName": nc_name_idx,

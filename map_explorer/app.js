@@ -1336,6 +1336,7 @@ function cellRecord() {
       pill(st + " stringency", stc, stc + "1a") +
       (C.review[i] ? pill("needs human review", css("--warn-line"), css("--warn-bg")) : "") +
       (RESULT.isFront[i] && C.tt[i] >= 0 ? pill(C.ttMeta[C.tt[i]].name, TT_COLORS[C.tt[i] % TT_COLORS.length], TT_COLORS[C.tt[i] % TT_COLORS.length] + "1a") : "") +
+      (C.occ && C.occ[i] ? pill("occupied: " + (C.npVals[C.npName[i]] || "existing plant"), STAT.crit, STAT.crit + "1a") : "") +
     "</div>"}));
   rh.appendChild(satView(C.lat[i], C.lon[i], [cellRingLonLat(i)], "H3 cell"));
   box.appendChild(rh);
@@ -1362,7 +1363,13 @@ function cellRecord() {
   dl.appendChild(kv("Nearest line", C.lineKm[i].toFixed(2) + " km" + (C.kv[i] ? " · " + C.kv[i] + " kV" : "")));
   dl.appendChild(kv("Substation", "<span style='font-family:inherit'>" + (C.subVals[C.sub[i]] || "—") + "</span>"));
   dl.appendChild(kv("Nearest data center", C.idcKm[i].toFixed(1) + " km"));
-  dl.appendChild(kv("Renewables nearby", fmt(C.renMw[i], 1) + " MW"));
+  if (C.renOp && C.renOp[i] != null) {
+    dl.appendChild(kv("Renewables within 25 km", fmt(C.renOp[i], 0) + " MW operating <span style='font-family:inherit;color:var(--muted)'>· " + fmt(C.renPro[i] || 0, 0) + " MW proposed</span>"));
+    dl.appendChild(kv("Counted in energy objective", fmt(C.renEff[i], 0) + " MW <span style='font-family:inherit;color:var(--muted)'>(operating + ½ construction + ¼ proposed)</span>"));
+  } else {
+    dl.appendChild(kv("Renewables nearby", fmt(C.renMw[i], 1) + " MW"));
+  }
+  if (C.npKm && C.npKm[i] != null) dl.appendChild(kv("Nearest operating plant", C.npKm[i].toFixed(2) + " km <span style='font-family:inherit'>· " + (C.npVals[C.npName[i]] || "—") + (C.npMw[i] != null ? ", " + fmt(C.npMw[i], 0) + " MW" : "") + "</span>" + (C.occ[i] ? " <span style='font-family:inherit;color:" + STAT.crit + "'>— on or beside the cell; sent to review</span>" : "")));
 
   dl.appendChild(el("div", {class: "sec eyebrow", text: "Phase 4 — objectives (0 best)"}));
   [["Grid cost", C.oGrid[i]], ["Fiber latency", C.oLat[i]], ["Energy shortfall", C.oEner[i]],
