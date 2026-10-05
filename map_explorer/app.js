@@ -1206,6 +1206,61 @@ function policyExplanation(i) {
   return wrap;
 }
 
+/* satellite view: a 3 x 3 mosaic of Esri World Imagery tiles around a point, with the cell or site outline on top.
+   No API key; attribution is required and shown. Imagery date varies by area and can predate recent construction. */
+var SAT_TILE = "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}";
+function cellRingLonLat(i) {
+  var g = C.geom[i], x = g[0], y = g[1], pts = [[C.x0 + x / C.scale, C.y0 + y / C.scale]];
+  for (var j = 2; j < g.length; j += 2) { x += g[j]; y += g[j + 1]; pts.push([C.x0 + x / C.scale, C.y0 + y / C.scale]); }
+  return pts;
+}
+function satView(lat, lon, rings, label) {
+  // rings: array of [lon, lat] rings to outline (may be empty); zoom chosen so the outline fills ~40 % of the view
+  var span = 0;
+  rings.forEach(function (r) {
+    var xs = r.map(function (p) { return p[0]; }), ys = r.map(function (p) { return p[1]; });
+    span = Math.max(span, (Math.max.apply(null, xs) - Math.min.apply(null, xs)) * Math.cos(lat * Math.PI / 180), Math.max.apply(null, ys) - Math.min.apply(null, ys));
+  });
+  var z = span > 0 ? Math.floor(Math.log2(360 * 3 / (span * 2.5))) : 16;
+  z = Math.max(12, Math.min(17, z));
+  var world = 256 * Math.pow(2, z);
+  function px(ln, lt) {
+    var s_ = Math.sin(lt * Math.PI / 180);
+    return [(ln + 180) / 360 * world, (0.5 - Math.log((1 + s_) / (1 - s_)) / (4 * Math.PI)) * world];
+  }
+  var c = px(lon, lat), tx = Math.floor(c[0] / 256), ty = Math.floor(c[1] / 256);
+  var ox = (tx - 1) * 256, oy = (ty - 1) * 256;
+  var wrap = el("div", {class: "sat"});
+  var frame = el("div", {class: "satframe"});
+  var inner = el("div", {class: "satinner"});
+  frame.appendChild(inner);
+  for (var dy = -1; dy <= 1; dy++) for (var dx = -1; dx <= 1; dx++) {
+    var img = el("img", {alt: "", loading: "lazy", draggable: "false",
+      src: SAT_TILE.replace("{z}", z).replace("{x}", tx + dx).replace("{y}", ty + dy),
+      style: "left:" + ((dx + 1) * 256) + "px;top:" + ((dy + 1) * 256) + "px"});
+    inner.appendChild(img);
+  }
+  var svg = mk("svg", {viewBox: "0 0 768 768", class: "satsvg"});
+  rings.forEach(function (r) {
+    var d = "M" + r.map(function (p) { var q = px(p[0], p[1]); return (q[0] - ox).toFixed(1) + " " + (q[1] - oy).toFixed(1); }).join("L") + "Z";
+    svg.appendChild(mk("path", {d: d, fill: "none", stroke: "#000", "stroke-width": 5, "stroke-opacity": .45}));
+    svg.appendChild(mk("path", {d: d, fill: "none", stroke: "#fff", "stroke-width": 2.2, "stroke-dasharray": rings.length > 1 ? "" : "7 4"}));
+  });
+  svg.appendChild(mk("circle", {cx: (c[0] - ox).toFixed(1), cy: (c[1] - oy).toFixed(1), r: 4, fill: "#ff3b7a", stroke: "#fff", "stroke-width": 1.5}));
+  inner.appendChild(svg);
+  wrap.appendChild(frame);
+  var fit = function () { var w = frame.clientWidth; if (w) inner.style.transform = "scale(" + (w / 768) + ")"; };
+  if (window.ResizeObserver) new ResizeObserver(fit).observe(frame); else { window.addEventListener("resize", fit); setTimeout(fit, 0); }
+  requestAnimationFrame(fit);
+  var mPerPx = 40075016.686 * Math.cos(lat * Math.PI / 180) / world;
+  var km = (768 * mPerPx / 1000).toFixed(1);
+  var cap = el("div", {class: "satcap"});
+  cap.appendChild(el("span", {text: (label ? label + " · " : "") + km + " km across · Esri World Imagery (Maxar, Earthstar Geographics); date varies by area"}));
+  cap.appendChild(el("a", {href: "https://earth.google.com/web/@" + lat.toFixed(5) + "," + lon.toFixed(5) + ",0a,2500d,35y,0h,0t,0r", target: "_blank", rel: "noopener", text: "Google Earth"}));
+  wrap.appendChild(cap);
+  return wrap;
+}
+
 /* coordinate header: decimal degrees in "lat, lon" order (what Google Maps, OSM and QGIS accept), one-click copy, map links */
 function coordHead(lat, lon, sub) {
   var txt = lat.toFixed(5) + ", " + lon.toFixed(5);
@@ -1222,10 +1277,8 @@ function coordHead(lat, lon, sub) {
   row.appendChild(btn);
   wrap.appendChild(row);
   var links = el("div", {class: "s coordlinks"});
-  links.appendChild(el("a", {href: "https://www.google.com/maps?q=" + lat.toFixed(5) + "," + lon.toFixed(5), target: "_blank", rel: "noopener", text: "Google Maps"}));
-  links.appendChild(document.createTextNode(" · "));
-  links.appendChild(el("a", {href: "https://www.openstreetmap.org/?mlat=" + lat.toFixed(5) + "&mlon=" + lon.toFixed(5) + "#map=15/" + lat.toFixed(5) + "/" + lon.toFixed(5), target: "_blank", rel: "noopener", text: "OpenStreetMap"}));
-  if (sub) { links.appendChild(document.createTextNode(" · ")); links.appendChild(el("span", {class: "mono", text: sub, title: "H3 cell id (resolution 8)"})); }
+  links.appendChild(el("span", {text: "WGS 84 · lat, lon"}));
+  if (sub) { links.appendChild(document.createTextNode(" · ")); links.appendChild(el("span", {class: "mono", text: sub})); }
   wrap.appendChild(links);
   return wrap;
 }
@@ -1285,6 +1338,7 @@ function cellRecord() {
       (C.review[i] ? pill("needs human review", css("--warn-line"), css("--warn-bg")) : "") +
       (RESULT.isFront[i] && C.tt[i] >= 0 ? pill(C.ttMeta[C.tt[i]].name, TT_COLORS[C.tt[i] % TT_COLORS.length], TT_COLORS[C.tt[i] % TT_COLORS.length] + "1a") : "") +
     "</div>"}));
+  rh.appendChild(satView(C.lat[i], C.lon[i], [cellRingLonLat(i)], "H3 cell"));
   box.appendChild(rh);
 
   var dl = el("dl", {});
@@ -1335,6 +1389,8 @@ function dcRecord(i) {
       pill(DC_STATUS[d.status[i]], stc, stc + "1a") +
       (precTxt ? pill(precTxt, css("--warn-line"), css("--warn-bg")) : "") +
     "</div>"}));
+  var cse = caseOf(i);
+  if (d.prec[i] === "exact") rh.appendChild(satView(d.lat[i], d.lon[i], cse ? [cse.site.polygon] : [], cse ? "observed footprint" : "facility"));
   box.appendChild(rh);
   var dl = el("dl", {});
   dl.appendChild(kv("Capacity", mwTxt));
