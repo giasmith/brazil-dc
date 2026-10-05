@@ -23,6 +23,8 @@ Everything runs client-side. There is no tile server, no API and no build step �
 | `data.js` | The dataset as one `window.SCN` object (~1.1 MB) |
 | `build_data.py` | Regenerates `data.js` from the workspace outputs |
 | `data/` | Simplified boundary geometry extracted from `brazil_territorial_layers.gpkg` |
+| `data/brazilian_data_centers.csv` | Curated facility list (operator, status, MW, cooling notes) behind the diamond markers |
+| `data/cases.json` | Case files: an observed construction footprint, an observation summary and a legal record, each attached to one row of the facility list by `dc_name`. First entry: the Pecém (Omnia / TikTok) site, located in `../analysis/pecem_dc_location/` and contested in ACP 0080626-66.2026.4.05.8100 |
 
 ## Run it locally
 
@@ -88,3 +90,12 @@ facilities) · MapBiomas-family land cover and surface water · Copernicus Senti
 via Google Earth Engine.
 
 Generated September 14, 2026 from `~/Projects/Brazil`.
+
+## Case files
+
+`data/cases.json` is hand-curated. Each record needs `dc_name` (must match exactly one `Operator & Campus`
+in the facility CSV), `site.polygon` (a closed lon/lat ring), `observation`, `project`, `legal` and `sources`.
+`build_data.py` links it to the facility row; in the Ceará view the footprint draws as a dashed outline
+under the facility diamond, and the facility record gains a "Case file" section. Claims are the
+plaintiffs' allegations and are labelled as such; locations derived from imagery carry the
+`inferred_location` flag.

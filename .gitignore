@@ -33,3 +33,14 @@ Thumbs.db
 
 # Archived nested git repo from the standalone map_explorer checkout (2026-09-14).
 /_archive/
+
+# ---------------------------------------------------------- not for the public repo
+/CoLab_budget/
+
+# ------------------------------------------------- Sentinel-2 footprint rasters (regenerate with
+# scripts/detect_pecem_footprint.py); small detail panels, CSV and GeoJSON stay tracked
+analysis/**/footprint/*.tif
+analysis/**/footprint/before_rgb.png
+analysis/**/footprint/after_rgb.png
+analysis/**/footprint/change_overlay.png
+analysis/**/__pycache__/

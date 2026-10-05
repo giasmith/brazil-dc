@@ -1,0 +1,29 @@
+{
+  "search_file": "/Users/nqj5zk/Projects/Brazil/analysis/pecem_dc_location/pecem_candidate_parcels.geojson",
+  "buffer_m": 500,
+  "scale_m": 10,
+  "before": [
+    "2025-07-01",
+    "2026-01-01"
+  ],
+  "after": [
+    "2026-07-01",
+    "2026-10-05"
+  ],
+  "scenes_before_available": null,
+  "scenes_before_used": null,
+  "scenes_after_available": null,
+  "scenes_after_used": null,
+  "after_clear_fraction": 1.0,
+  "cloud_pct": 60,
+  "thresholds": {
+    "min_ha": 5.0,
+    "ndvi_after_max": 0.25,
+    "ndvi_drop": 0.15,
+    "ndbi_rise": 0.1,
+    "bsi_rise": 0.1
+  },
+  "n_detected": 2,
+  "total_detected_ha": 48.5,
+  "status": "INFERRED from Sentinel-2 change detection; confirm visually"
+}

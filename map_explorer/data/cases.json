@@ -1,0 +1,564 @@
+[
+ {
+  "id": "pecem_omnia_2026",
+  "dc_name": "Casa dos Ventos / Omnia - Pecém Data Center (TikTok reported)",
+  "title": "Pecém Data Center (Casa dos Ventos / Omnia; TikTok reported)",
+  "status_flags": [
+   "inferred_location",
+   "under_litigation",
+   "no_eia_rima",
+   "no_ilo169_consultation"
+  ],
+  "site": {
+   "polygon": [
+    [
+     -38.82521,
+     -3.6517
+    ],
+    [
+     -38.81837,
+     -3.6517
+    ],
+    [
+     -38.81837,
+     -3.65179
+    ],
+    [
+     -38.8181,
+     -3.65179
+    ],
+    [
+     -38.8181,
+     -3.65197
+    ],
+    [
+     -38.81801,
+     -3.65197
+    ],
+    [
+     -38.81801,
+     -3.65224
+    ],
+    [
+     -38.81792,
+     -3.65224
+    ],
+    [
+     -38.81792,
+     -3.65233
+    ],
+    [
+     -38.81783,
+     -3.65233
+    ],
+    [
+     -38.81783,
+     -3.6526
+    ],
+    [
+     -38.81774,
+     -3.6526
+    ],
+    [
+     -38.81774,
+     -3.65269
+    ],
+    [
+     -38.81765,
+     -3.65269
+    ],
+    [
+     -38.81765,
+     -3.65278
+    ],
+    [
+     -38.81747,
+     -3.65278
+    ],
+    [
+     -38.81747,
+     -3.65288
+    ],
+    [
+     -38.81738,
+     -3.65288
+    ],
+    [
+     -38.81738,
+     -3.65306
+    ],
+    [
+     -38.81729,
+     -3.65306
+    ],
+    [
+     -38.81729,
+     -3.65342
+    ],
+    [
+     -38.8172,
+     -3.65342
+    ],
+    [
+     -38.8172,
+     -3.6536
+    ],
+    [
+     -38.81711,
+     -3.6536
+    ],
+    [
+     -38.81711,
+     -3.65369
+    ],
+    [
+     -38.81702,
+     -3.65369
+    ],
+    [
+     -38.81702,
+     -3.65378
+    ],
+    [
+     -38.81693,
+     -3.65378
+    ],
+    [
+     -38.81693,
+     -3.6545
+    ],
+    [
+     -38.81684,
+     -3.6545
+    ],
+    [
+     -38.81684,
+     -3.65514
+    ],
+    [
+     -38.81675,
+     -3.65514
+    ],
+    [
+     -38.81675,
+     -3.65559
+    ],
+    [
+     -38.81666,
+     -3.65559
+    ],
+    [
+     -38.81666,
+     -3.65613
+    ],
+    [
+     -38.81675,
+     -3.65613
+    ],
+    [
+     -38.81675,
+     -3.65622
+    ],
+    [
+     -38.81693,
+     -3.65622
+    ],
+    [
+     -38.81693,
+     -3.65631
+    ],
+    [
+     -38.81738,
+     -3.65631
+    ],
+    [
+     -38.81738,
+     -3.6564
+    ],
+    [
+     -38.81774,
+     -3.6564
+    ],
+    [
+     -38.81774,
+     -3.65649
+    ],
+    [
+     -38.81783,
+     -3.65649
+    ],
+    [
+     -38.81783,
+     -3.65677
+    ],
+    [
+     -38.8181,
+     -3.65677
+    ],
+    [
+     -38.8181,
+     -3.65667
+    ],
+    [
+     -38.81819,
+     -3.65667
+    ],
+    [
+     -38.81819,
+     -3.65658
+    ],
+    [
+     -38.81864,
+     -3.65658
+    ],
+    [
+     -38.81864,
+     -3.65649
+    ],
+    [
+     -38.81873,
+     -3.65649
+    ],
+    [
+     -38.81873,
+     -3.65631
+    ],
+    [
+     -38.819,
+     -3.65631
+    ],
+    [
+     -38.819,
+     -3.65658
+    ],
+    [
+     -38.81972,
+     -3.65658
+    ],
+    [
+     -38.81972,
+     -3.65649
+    ],
+    [
+     -38.8199,
+     -3.65649
+    ],
+    [
+     -38.8199,
+     -3.6564
+    ],
+    [
+     -38.81999,
+     -3.6564
+    ],
+    [
+     -38.81999,
+     -3.65631
+    ],
+    [
+     -38.82017,
+     -3.65631
+    ],
+    [
+     -38.82017,
+     -3.65613
+    ],
+    [
+     -38.82026,
+     -3.65613
+    ],
+    [
+     -38.82026,
+     -3.65595
+    ],
+    [
+     -38.82035,
+     -3.65595
+    ],
+    [
+     -38.82035,
+     -3.65586
+    ],
+    [
+     -38.82071,
+     -3.65586
+    ],
+    [
+     -38.82071,
+     -3.65577
+    ],
+    [
+     -38.8208,
+     -3.65577
+    ],
+    [
+     -38.8208,
+     -3.65568
+    ],
+    [
+     -38.82125,
+     -3.65568
+    ],
+    [
+     -38.82125,
+     -3.65559
+    ],
+    [
+     -38.82152,
+     -3.65559
+    ],
+    [
+     -38.82152,
+     -3.6555
+    ],
+    [
+     -38.8217,
+     -3.6555
+    ],
+    [
+     -38.8217,
+     -3.65541
+    ],
+    [
+     -38.82179,
+     -3.65541
+    ],
+    [
+     -38.82179,
+     -3.65523
+    ],
+    [
+     -38.82188,
+     -3.65523
+    ],
+    [
+     -38.82188,
+     -3.65505
+    ],
+    [
+     -38.82197,
+     -3.65505
+    ],
+    [
+     -38.82197,
+     -3.65496
+    ],
+    [
+     -38.82206,
+     -3.65496
+    ],
+    [
+     -38.82206,
+     -3.65487
+    ],
+    [
+     -38.82215,
+     -3.65487
+    ],
+    [
+     -38.82215,
+     -3.65478
+    ],
+    [
+     -38.82224,
+     -3.65478
+    ],
+    [
+     -38.82224,
+     -3.65469
+    ],
+    [
+     -38.82233,
+     -3.65469
+    ],
+    [
+     -38.82233,
+     -3.6545
+    ],
+    [
+     -38.82242,
+     -3.6545
+    ],
+    [
+     -38.82242,
+     -3.65441
+    ],
+    [
+     -38.82251,
+     -3.65441
+    ],
+    [
+     -38.82251,
+     -3.65396
+    ],
+    [
+     -38.8226,
+     -3.65396
+    ],
+    [
+     -38.8226,
+     -3.65387
+    ],
+    [
+     -38.82269,
+     -3.65387
+    ],
+    [
+     -38.82269,
+     -3.65351
+    ],
+    [
+     -38.8226,
+     -3.65351
+    ],
+    [
+     -38.8226,
+     -3.65279
+    ],
+    [
+     -38.82251,
+     -3.65279
+    ],
+    [
+     -38.82251,
+     -3.65224
+    ],
+    [
+     -38.8235,
+     -3.65224
+    ],
+    [
+     -38.8235,
+     -3.65215
+    ],
+    [
+     -38.82413,
+     -3.65215
+    ],
+    [
+     -38.82413,
+     -3.65224
+    ],
+    [
+     -38.82512,
+     -3.65224
+    ],
+    [
+     -38.82512,
+     -3.65215
+    ],
+    [
+     -38.82521,
+     -3.65215
+    ],
+    [
+     -38.82521,
+     -3.6517
+    ]
+   ],
+   "centroid": [
+    -38.8199,
+    -3.6539
+   ],
+   "zone": "ZPE Setor II, Complexo Industrial e Portuário do Pecém, Caucaia CE",
+   "area_ha_observed": 30.3,
+   "area_ha_reported": [
+    68.2,
+    13.2
+   ],
+   "apa_distance_km": 1.0,
+   "apa_distance_note": "nearest edge to APA Lagamar do Cauípe in the simplified CNUC layer; press reports ~2 km",
+   "located_by": "Press (ZPE II, ~2 km from the Cauípe) + CIPP Plano Diretor 2022 georeferenced to UTM 24S + Sentinel-2 change detection",
+   "confidence": "inferred",
+   "analysis_dir": "analysis/pecem_dc_location/",
+   "area_note": "68.2 ha lot (681,590 m2) requested; 131,884.6 m2 (13.2 ha) built area; press also quotes 34 and 70 ha"
+  },
+  "observation": {
+   "sensor": "Sentinel-2 L2A (COPERNICUS/S2_SR_HARMONIZED), 10 m, SCL cloud mask",
+   "before": "2025-07-01 to 2026-01-01",
+   "after": "2026-07-01 to 2026-10-05",
+   "ndvi_before": 0.45,
+   "ndvi_after": 0.06,
+   "first_disturbance": "2025-12 / 2026-01",
+   "note": "No NDVI recovery in the 2026 rainy season (0.16-0.28 vs 0.59-0.71 in 2025); building slabs visible by Oct 2026. 30 ha is a lower bound (only pixels vegetated in late 2025 are counted)."
+  },
+  "project": {
+   "developer": "Casa dos Ventos (Mário Araripe); Omnia as construction/development partner (US$2 bn deal)",
+   "tenant_reported": "ByteDance / TikTok (reported; not confirmed by the developer)",
+   "mw": 300,
+   "backup": "120 diesel generators (per MPF)",
+   "cooling": "developer: closed-circuit, 30 m3/day (= 72 Caucaia households, 0.045% of residential demand); MPF: groundwater intake",
+   "water_note": "developer 30 m3/day vs press figures up to 144,000 L/day; Cogerh permit required",
+   "construction_start_reported": "earthworks by 2025-12 (announced Sep 2025); Jan 2026 in later reports",
+   "operation_target_reported": "2027-H2",
+   "mw_expansion": "900 MW fully built-out (Data Center Map; ONS favourable opinion for 300 MW first-phase access)",
+   "substation": "230 kV, requested 2025-05-30",
+   "investment_reported": "R$ 50 bn phase 1; R$ 100 bn phase 2 (2,023 MW wind/solar), R$ 150 bn total",
+   "jobs_reported": "20,000-25,000 direct and indirect"
+  },
+  "legal": {
+   "instrument": "Ação Civil Pública",
+   "case": "0080626-66.2026.4.05.8100",
+   "court": "Justiça Federal, Ceará",
+   "announced": "2026-09-10",
+   "plaintiffs": [
+    "MPF",
+    "DPU"
+   ],
+   "defendants": [
+    "Omnia",
+    "Semace",
+    "Estado do Ceará",
+    "Município de Caucaia"
+   ],
+   "licence_stage": "LP issued; LI filed and under analysis at Semace (pending requirements, Cogerh water permit) per Diário do Nordeste; MPF release says LP and LI granted; LO contested",
+   "claims": [
+    "No EIA/Rima before licensing",
+    "No free, prior and informed consultation of the Anacé (ILO 169)",
+    "Groundwater withdrawal in a water-scarce area",
+    "~2 km from APA Lagamar do Cauípe; Anacé territory under Funai study nearby"
+   ],
+   "remedies_sought": [
+    "Withhold operating licence until EIA/Rima",
+    "ILO-169 consultation of the Anacé",
+    "Hydrogeological testing and monitoring",
+    "Noise disclosure and electrical compliance checks"
+   ],
+   "ruling": "none found as of 2026-10-04"
+  },
+  "sources": [
+   {
+    "t": "MPF/DPU press release, 2026-09-10",
+    "u": "https://www.mpf.mp.br/o-mpf/unidades/pr-ce/noticias/mpf-e-dpu-vao-a-justica-para-impedir-operacao-de-data-center-no-complexo-do-pecem-em-caucaia-ce"
+   },
+   {
+    "t": "Gazeta do Povo - Onde será o data center do TikTok",
+    "u": "https://www.gazetadopovo.com.br/brasil/onde-sera-o-data-center-de-r-50-bilhoes-do-tiktok-no-brasil/"
+   },
+   {
+    "t": "Poder360 - Entenda como funcionará o data center",
+    "u": "https://www.poder360.com.br/poder-infra/entenda-como-funcionara-o-data-center-de-r-200-bilhoes-do-tiktok-no-ceara/"
+   },
+   {
+    "t": "CIPP Plano Diretor Geral (Feb 2022)",
+    "u": "https://www.complexodopecem.com.br/wp-content/uploads/2022/02/Plano-Diretor-Geral-Complexo-do-Pecem.pdf"
+   },
+   {
+    "t": "Diário do Nordeste - Data Center de Caucaia: consumo d'água, local e licença",
+    "u": "https://diariodonordeste.verdesmares.com.br/ceara/amp/data-center-de-caucaia-tem-previsao-sobre-consumo-dagua-local-de-instalacao-e-licenca-aprovada-1.3658555"
+   },
+   {
+    "t": "Diário do Nordeste - O que se sabe sobre o mega data center (Victor Ximenes)",
+    "u": "https://diariodonordeste.verdesmares.com.br/opiniao/colunistas/victor-ximenes/o-que-se-sabe-sobre-o-mega-data-center-de-r-50-bilhoes-no-ceara-1.3656962"
+   },
+   {
+    "t": "Diário do Nordeste - segunda fase R$ 100 bi (2025-09-04)",
+    "u": "https://diariodonordeste.verdesmares.com.br/negocios/data-center-da-casa-dos-ventos-tera-investimento-de-mais-r-100-bilhoes-em-segunda-fase-1.3687189"
+   },
+   {
+    "t": "Data Center Map - Pecém Data Center (Casa dos Ventos)",
+    "u": "https://www.datacentermap.com/brazil/fortaleza/casa-dos-ventos-data-center/"
+   }
+  ]
+ }
+]

@@ -1,0 +1,73 @@
+[project]
+name = "brazil-scn-sandbox"
+version = "0.1.0"
+description = "Brazil data-center remote sensing and policy workspace (Sovereign Compute Nexus)"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+  # --- already in .venv on 2026-10-04 (floors = installed versions) ---
+  "numpy>=2.4",
+  "pandas>=3.0",
+  "scipy>=1.18",
+  "scikit-learn>=1.9",
+  "matplotlib>=3.10",
+  "networkx>=3.6",
+  "geopandas>=1.1",
+  "shapely>=2.1",
+  "pyproj>=3.7",
+  "pyogrio>=0.12",
+  "pyarrow>=24.0",
+  "rasterio>=1.5",
+  "h3>=4.5",
+  "geobr>=0.2.2",
+  "osmnx>=2.1",
+  "folium>=0.20",
+  "earthengine-api>=1.7",
+  "google-api-python-client>=2.196",
+  "google-cloud-storage>=3.10",
+  "openpyxl>=3.1",
+  "requests>=2.34",
+  "lxml>=5.4",
+  "html5lib>=1.1",
+  "pillow>=12.2",
+  "ipykernel>=7.2",
+  "awscli>=1.45",
+  # --- added: remote sensing / raster stack (Sentinel-2, Landsat, atmospheric-correction comparison) ---
+  "xarray",
+  "rioxarray",
+  "dask[array]",
+  "pystac-client",
+  "planetary-computer",
+  "odc-stac",
+  "earthaccess",
+  "geemap",
+  "rasterstats",
+  "rio-cogeo",
+  "scikit-image",
+  "opencv-python-headless",
+  # --- added: stats, plotting, tabular/dataops ---
+  "statsmodels",
+  "seaborn",
+  "plotly",
+  "duckdb",
+  "mapclassify",
+  "contextily",
+  "python-docx",
+  "pypdf",
+]
+
+[dependency-groups]
+dev = [
+  "pytest",
+  "ruff",
+  "jupyterlab",
+  "nbformat",
+  "nbstripout",
+]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+testpaths = ["scripts/tests"]
+pythonpath = ["scripts"]

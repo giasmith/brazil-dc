@@ -488,8 +488,16 @@ function ceClick(e) {
 }
 function dcTip(i) {
   var d = N.dc, mw = d.mw[i] == null ? d.mwNote[i] : (d.mwNote[i] ? d.mwNote[i] + " " : "") + fmt(d.mw[i]) + " MW";
+  var c = caseOf(i);
   return "<b>" + d.nm[i] + "</b><span class='k'>" + DC_STATUS[d.status[i]] + "</span> · <span class='mono'>" + mw + "</span>" +
-         (d.prec[i] !== "exact" ? "<br><span class='k'>location approximate (" + (d.prec[i] === "city" ? "city centroid" : "state only") + ")</span>" : "");
+         (d.prec[i] !== "exact" ? "<br><span class='k'>location approximate (" + (d.prec[i] === "city" ? "city centroid" : "state only") + ")</span>" : "") +
+         (c ? "<br><span class='k'>observed footprint " + c.site.area_ha_observed + " ha · " + c.legal.instrument + " " + c.legal.case + "</span>" : "");
+}
+/* the case file attached to a curated data-center row, if any */
+function caseOf(i) {
+  if (!N.dc || !N.dc.case || !N.cases) return null;
+  var k = N.dc.case[i];
+  return k == null ? null : N.cases[k];
 }
 var OVER = null, CLIP = null, FIT = null;
 
@@ -525,7 +533,17 @@ function paintCeara() {
   if (S.overlays.dc && N.dc) {
     CE_DC.forEach(function (i) {
       if (!S.dcStatus[N.dc.status[i]]) return;
-      OVER.gDc.appendChild(dcMarker(Q(N.dc.lon[i]), R(N.dc.lat[i]), dcSize(N.dc.mw[i], 230, 30, 250), N.dc.status[i], i, S.dcSel === i));
+      var sz = dcSize(N.dc.mw[i], 230, 30, 250);
+      if (caseOf(i)) sz *= 0.45;   // an observed footprint is drawn under it; keep the diamond from hiding it
+      OVER.gDc.appendChild(dcMarker(Q(N.dc.lon[i]), R(N.dc.lat[i]), sz, N.dc.status[i], i, S.dcSel === i));
+    });
+    // observed construction footprints from the case files: dashed outline, light fill, drawn under the diamonds
+    if (N.cases) N.cases.forEach(function (c, k) {
+      var di = N.dc.case ? N.dc.case.indexOf(k) : -1;
+      if (di < 0 || !S.dcStatus[N.dc.status[di]]) return;
+      var d = "M" + c.site.polygon.map(function (pt) { return Q(pt[0]) + " " + R(pt[1]); }).join("L") + "Z";
+      OVER.gOv.appendChild(mk("path", {d: d, fill: DC_COLOR, "fill-opacity": S.dcSel === di ? .3 : .16, stroke: S.dcSel === di ? SELECTED : DC_COLOR,
+                                       "stroke-width": S.dcSel === di ? 2.4 : 1.6, "stroke-dasharray": "5 3", "vector-effect": "non-scaling-stroke"}));
     });
   }
   if (S.sel != null) {
@@ -1018,7 +1036,7 @@ function renderRight() {
       var dt = statusTally(N.dc.status, CE_DC);
       g2.appendChild(el("div", {class: "eyebrow", style: "margin-top:8px", text: "Data centers near the box"}));
       STATUS_ORDER.forEach(function (k) { if (dt[k]) g2.appendChild(swg(k, DC_COLOR, DC_STATUS[k] + " (" + dt[k] + ")", true)); });
-      g2.appendChild(el("p", {class: "hint", text: "Diamonds, sized by capacity. Click one for its record."}));
+      g2.appendChild(el("p", {class: "hint", text: "Diamonds, sized by capacity. Click one for its record." + (N.cases && N.cases.length ? " Dashed outline: construction footprint observed in Sentinel-2 (inferred site)." : "")}));
     }
     rail.appendChild(g2);
 
@@ -1141,7 +1159,33 @@ function dcRecord(i) {
   dl.appendChild(kv("Coordinates", Math.abs(d.lat[i]).toFixed(3) + "°S, " + Math.abs(d.lon[i]).toFixed(3) + "°W"));
   dl.appendChild(el("div", {class: "sec eyebrow", text: "Cooling & metrics"}));
   dl.appendChild(el("div", {class: "kv", html: "<dd style='text-align:left;font-family:inherit;margin:0'>" + (d.notes[i] || "—") + "</dd>"}));
-  if (d.url[i]) {
+  var c = caseOf(i);
+  if (c) {
+    var L = c.legal, O = c.observation, P = c.project, T = c.site;
+    var flag = function (t) { return pill(t, css("--warn-line"), css("--warn-bg")); };
+    dl.appendChild(el("div", {class: "sec eyebrow", text: "Case file"}));
+    dl.appendChild(el("div", {style: "display:flex;gap:5px;flex-wrap:wrap;margin:4px 0 6px", html:
+      (c.status_flags || []).map(function (f) { return flag(f.replace(/_/g, " ")); }).join("")}));
+    dl.appendChild(kv("Site", "<span style='font-family:inherit'>" + T.zone + "</span>"));
+    dl.appendChild(kv("Observed footprint", T.area_ha_observed + " ha <span style='font-family:inherit;color:var(--muted)'>(reported " + T.area_ha_reported.join("–") + " ha)</span>"));
+    dl.appendChild(kv("First disturbance", O.first_disturbance));
+    dl.appendChild(kv("NDVI before → after", O.ndvi_before.toFixed(2) + " → " + O.ndvi_after.toFixed(2)));
+    dl.appendChild(kv("Distance to APA", T.apa_distance_km.toFixed(1) + " km <span style='font-family:inherit;color:var(--muted)'>(press: ~2 km)</span>"));
+    dl.appendChild(kv("Location basis", "<span style='font-family:inherit'>" + T.located_by + "</span>"));
+    dl.appendChild(kv("Reported", "<span style='font-family:inherit'>" + P.mw + " MW · " + P.backup + " · " + P.cooling + " · start " + P.construction_start_reported + ", operation " + P.operation_target_reported + "</span>"));
+    dl.appendChild(el("div", {class: "sec eyebrow", text: "Litigation"}));
+    dl.appendChild(kv(L.instrument, L.case));
+    dl.appendChild(kv("Court · announced", "<span style='font-family:inherit'>" + L.court + "</span> · " + L.announced));
+    dl.appendChild(kv("Parties", "<span style='font-family:inherit'>" + L.plaintiffs.join(" + ") + " v. " + L.defendants.join(", ") + "</span>"));
+    dl.appendChild(kv("Licence stage", "<span style='font-family:inherit'>" + L.licence_stage + "</span>"));
+    dl.appendChild(el("div", {class: "kv", html: "<dt>Claims</dt><dd style='text-align:left;font-family:inherit;margin:0'>" + L.claims.map(function (t) { return "· " + t; }).join("<br>") + "</dd>"}));
+    dl.appendChild(el("div", {class: "kv", html: "<dt>Remedies sought</dt><dd style='text-align:left;font-family:inherit;margin:0'>" + L.remedies_sought.map(function (t) { return "· " + t; }).join("<br>") + "</dd>"}));
+    dl.appendChild(kv("Ruling", "<span style='font-family:inherit'>" + L.ruling + "</span>"));
+    dl.appendChild(el("div", {class: "kv", html: "<dd style='text-align:left;font-family:inherit;margin:0;color:var(--muted)'>" + O.note + " Claims are the plaintiffs' allegations, not findings.</dd>"}));
+    dl.appendChild(el("div", {class: "sec eyebrow", text: "Sources"}));
+    dl.appendChild(el("div", {class: "kv", html: "<dd style='text-align:left;font-family:inherit;margin:0'>" +
+      c.sources.map(function (sr) { return "<a href='" + sr.u + "' target='_blank' rel='noopener' style='color:var(--accent-ink)'>" + sr.t + "</a>"; }).join("<br>") + "</dd>"}));
+  } else if (d.url[i]) {
     dl.appendChild(el("div", {class: "sec eyebrow", text: "Source"}));
     var host = d.url[i].replace(/^https?:\/\//, "").replace(/\/.*$/, "");
     dl.appendChild(el("div", {class: "kv", html: "<dd style='text-align:left;font-family:inherit;margin:0'><a href='" + d.url[i] + "' target='_blank' rel='noopener' style='color:var(--accent-ink)'>" + host + "</a></dd>"}));

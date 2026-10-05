@@ -334,10 +334,36 @@ if os.path.exists(DC_PATH):
     print(f"data centers: {len(dc['nm'])} placed {dict(_c.Counter(dc['prec']))}, "
           f"status {dict(_c.Counter(dc['status']))}, skipped {dc_skipped}")
 else:
+    dc = None
     print("data centers: csv not found, layer omitted")
 
+# ------------------------------------------------------- case files (litigation, observed footprints)
+# map_explorer/data/cases.json — hand-curated records that attach a site polygon, an observation
+# summary and a legal record to one row of the curated data-center list (matched on dc_name).
+CASES_PATH = f"{OUT}/data/cases.json"
+if dc is not None and os.path.exists(CASES_PATH):
+    cases = json.load(open(CASES_PATH, encoding="utf-8"))
+    dc["case"] = [None] * len(dc["nm"])
+    kept = []
+    for c in cases:
+        hits = [i for i, nm in enumerate(dc["nm"]) if nm == c.get("dc_name")]
+        if len(hits) != 1:
+            print(f"cases: {c.get('id')!r} matches {len(hits)} data-center rows for name {c.get('dc_name')!r}; skipped")
+            continue
+        ring = c["site"]["polygon"]
+        if len(ring) < 4 or ring[0] != ring[-1]:
+            print(f"cases: {c['id']!r} polygon must be a closed ring with >= 4 points; skipped")
+            continue
+        dc["case"][hits[0]] = len(kept)
+        kept.append(c)
+    national["cases"] = kept
+    print(f"cases: {len(kept)} attached {[c['id'] for c in kept]}")
+else:
+    print("cases: none")
+
+import datetime as _dt
 payload = {"ceara": ceara, "national": national,
-           "meta": {"generated": "2026-09-14", "source": "~/Projects/Brazil"}}
+           "meta": {"generated": _dt.date.today().isoformat(), "source": "~/Projects/Brazil"}}
 
 with open(f"{OUT}/data.js", "w") as fh:
     fh.write("window.SCN=")
