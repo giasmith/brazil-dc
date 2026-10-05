@@ -228,6 +228,33 @@ Output:
 Pareto frontier of compliant candidate H3 cells
 ```
 
+### Energy objective and occupancy (changed 2026-10-05)
+
+Found by looking at a frontier cell's satellite view: the hexagon was covered by the operating
+200 MW Lavras solar farm, yet scored 0.93 on energy shortfall (near worst) and sat on the frontier as
+available land. Three causes, all fixed in `build_phase1_h3_baseline.py` and
+`run_scn_phase4_optimization.py`:
+
+1. `nearby_renewable_mw` summed the GEM current and proposed layers with equal weight, and the 176
+   under-construction units are in both layers, so they were double-counted. Phase 1 now writes
+   `nearby_renewable_mw_operating`, `_construction` (current layer only) and `_proposed`, keeping the
+   legacy total for continuity.
+2. Proposed capacity dominated the scale: the Ceará box holds 7,176 MW of planned wind (mostly offshore
+   filings, one of 3,000 MW) against 148 MW operating wind and 405 MW operating solar, so the 95th
+   percentile cap was set by paper projects. The energy objective now uses
+   `operating + 0.5 x construction + 0.25 x proposed` (flags `--construction-weight`, `--proposed-weight`)
+   on a log1p scale (`--energy-linear` restores linear). The weights are judgement calls and are
+   recorded in `phase4_optimization_summary.json`.
+3. Nothing asked whether a plant already stands on the cell (MapBiomas has no solar-farm class). Phase 1
+   now flags `occupied_by_generation` when an operating or under-construction unit of >= 5 MW lies
+   within 1 km of the cell centre (`--occupied-radius-km`, `--occupied-min-mw`), with the nearest plant's
+   name, size and distance. Phase 4 folds the flag into `human_review_required`: a Check, not an
+   exclusion, because a point cannot distinguish a substation from a 200 ha solar field.
+
+Expected effect (estimated from the explorer's plant table before the re-run): the Lavras cell's energy
+shortfall falls from 0.93 to about 0.25, about 45 cells are flagged occupied, 16 of them currently on
+the frontier. The shortlist will change; README, memo and paper figures need refreshing after the re-run.
+
 ## 48-Hour MVP Track
 
 The repo now includes a deliberately bounded proof-of-logic runner:

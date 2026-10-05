@@ -80,14 +80,46 @@ def load_phase3() -> gpd.GeoDataFrame:
     return gdf
 
 
-def add_phase4_objectives(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
+def effective_renewable_mw(gdf: gpd.GeoDataFrame, w_construction: float, w_proposed: float) -> tuple[pd.Series, str]:
+    """Operating capacity counts in full; under-construction and proposed capacity are discounted.
+
+    Changed 2026-10-05. The energy objective used nearby_renewable_mw, which summed operating and
+    proposed GEM units with equal weight (and double-counted under-construction units). In the Ceará
+    box that put 7 GW of planned wind - mostly offshore filings - on the same footing as 150 MW of
+    operating wind and 400 MW of operating solar, so a cell on a working solar farm looked energy-poor.
+    Falls back to the legacy column when a Phase 1 run predates the split.
+    """
+    cols = ["nearby_renewable_mw_operating", "nearby_renewable_mw_construction", "nearby_renewable_mw_proposed"]
+    if all(c in gdf.columns for c in cols):
+        op = pd.to_numeric(gdf[cols[0]], errors="coerce").fillna(0)
+        con = pd.to_numeric(gdf[cols[1]], errors="coerce").fillna(0)
+        pro = pd.to_numeric(gdf[cols[2]], errors="coerce").fillna(0)
+        return (op + w_construction * con + w_proposed * pro).clip(lower=0), "operating + %.2f construction + %.2f proposed" % (w_construction, w_proposed)
+    print("WARNING: Phase 1 output has no status-split renewable columns; energy objective falls back to nearby_renewable_mw (operating + proposed, equal weight). Re-run build_phase1_h3_baseline.py.")
+    return pd.to_numeric(gdf["nearby_renewable_mw"], errors="coerce").fillna(0), "legacy nearby_renewable_mw"
+
+
+def add_phase4_objectives(gdf: gpd.GeoDataFrame, args: argparse.Namespace | None = None) -> gpd.GeoDataFrame:
     gdf = gdf.copy()
+    w_con = getattr(args, "construction_weight", 0.5) if args else 0.5
+    w_pro = getattr(args, "proposed_weight", 0.25) if args else 0.25
+    log_scale = not (args and getattr(args, "energy_linear", False))
+    eff, eff_note = effective_renewable_mw(gdf, w_con, w_pro)
+    gdf["nearby_renewable_mw_effective"] = eff
+    gdf.attrs["energy_basis"] = eff_note + (" on log1p scale" if log_scale else " linear")
+    # occupancy (Phase 1, 2026-10-05): a plant already on the cell sends it to human review, not out of the run
+    if "occupied_by_generation" in gdf.columns:
+        occ = as_bool(gdf["occupied_by_generation"])
+        if "human_review_required" in gdf.columns:
+            gdf["human_review_required"] = as_bool(gdf["human_review_required"]) | occ
+        else:
+            gdf["human_review_required"] = occ
     grid_cost = (
         0.58 * normalize_minimize(gdf["nearest_hv_ons_bus_km"])
         + 0.42 * normalize_minimize(gdf["nearest_ons_line_km"])
     ).clip(0, 1)
     latency_cost = normalize_minimize(gdf["nearest_idc_km"])
-    energy_shortfall = normalize_maximize(gdf["nearby_renewable_mw"])
+    energy_shortfall = normalize_maximize(np.log1p(eff) if log_scale else eff)
     curtailment_shortfall = normalize_maximize(gdf["state_curtailed_mwh"])
 
     p_deg = pd.to_numeric(gdf["p_deg_rs"], errors="coerce").fillna(1).clip(0, 1)
@@ -166,7 +198,7 @@ def exclusion_reasons(row: pd.Series, args: argparse.Namespace) -> str:
         reasons.append("too_far_from_ons_line")
     if as_float(row.get("nearest_idc_km"), np.inf) > args.max_idc_km:
         reasons.append("too_far_from_idc_anchor")
-    if as_float(row.get("nearby_renewable_mw"), 0.0) < args.min_renewable_mw:
+    if as_float(row.get("nearby_renewable_mw_effective", row.get("nearby_renewable_mw")), 0.0) < args.min_renewable_mw:
         reasons.append("insufficient_nearby_renewables")
     if args.exclude_human_review and bool(row.get("human_review_required", False)):
         reasons.append("human_review_required")
@@ -506,6 +538,7 @@ def write_outputs(
         "nearest_ons_line_km",
         "nearest_idc_km",
         "nearby_renewable_mw",
+        "nearby_renewable_mw_effective",
         "state_curtailed_mwh",
     ]
     top_recommendations = (
@@ -532,6 +565,10 @@ def write_outputs(
             "max_line_km": args.max_line_km,
             "max_idc_km": args.max_idc_km,
             "min_renewable_mw": args.min_renewable_mw,
+            "energy_objective_basis": gdf.attrs.get("energy_basis", "unknown"),
+            "construction_weight": args.construction_weight,
+            "proposed_weight": args.proposed_weight,
+            "occupied_cells_sent_to_review": int(as_bool(gdf["occupied_by_generation"]).sum()) if "occupied_by_generation" in gdf.columns else None,
             "exclude_human_review": bool(args.exclude_human_review),
             "fsor_allowed_phase3": "hard constraint",
             "policy_hard_exclusion": "hard constraint",
@@ -561,7 +598,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--max-hv-bus-km", type=float, default=25.0, help="Maximum distance to a high-voltage ONS bus.")
     parser.add_argument("--max-line-km", type=float, default=15.0, help="Maximum distance to an ONS branch.")
     parser.add_argument("--max-idc-km", type=float, default=50.0, help="Maximum distance to an IDC/fiber anchor point.")
-    parser.add_argument("--min-renewable-mw", type=float, default=0.0, help="Minimum nearby renewable generation MW.")
+    parser.add_argument("--min-renewable-mw", type=float, default=0.0, help="Minimum effective nearby renewable generation MW (operating + weighted construction/proposed).")
+    parser.add_argument("--construction-weight", type=float, default=0.5, help="Weight on under-construction renewable MW in the energy objective.")
+    parser.add_argument("--proposed-weight", type=float, default=0.25, help="Weight on announced / pre-construction renewable MW in the energy objective.")
+    parser.add_argument("--energy-linear", action="store_true", help="Normalise effective MW linearly instead of on a log1p scale.")
     parser.add_argument("--recommendation-count", type=int, default=25, help="Number of final frontier sites to shortlist.")
     parser.add_argument("--exclude-human-review", action="store_true", help="Treat human-review cells as hard exclusions.")
     return parser.parse_args()
@@ -570,7 +610,7 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
     gdf = load_phase3()
-    gdf = add_phase4_objectives(gdf)
+    gdf = add_phase4_objectives(gdf, args)
     gdf, candidates = apply_hard_constraints(gdf, args)
     frontier = pareto_frontier(candidates, OBJECTIVE_COLS)
     recommendations = recommended_sites(frontier, args.recommendation_count)
@@ -604,6 +644,7 @@ def main() -> None:
         "nearest_hv_ons_bus_km",
         "nearest_ons_line_km",
         "nearby_renewable_mw",
+        "nearby_renewable_mw_effective",
     ]
     print("\nTop Phase 4 recommended H3 cells")
     print(recommendations[preview_cols].to_string(index=False))

@@ -214,17 +214,48 @@ def add_infrastructure_features(grid: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
     return grid
 
 
-def add_generation_context(grid: gpd.GeoDataFrame, radius_km: float) -> gpd.GeoDataFrame:
+def add_generation_context(grid: gpd.GeoDataFrame, radius_km: float, occupied_radius_km: float = 1.0, occupied_min_mw: float = 5.0) -> gpd.GeoDataFrame:
+    """Nearby renewable capacity split by status, plus an "already occupied by a plant" flag.
+
+    Changed 2026-10-05. Previously one number, nearby_renewable_mw, summed the GEM current and
+    proposed layers with equal weight. That had two problems: (1) the 176 under-construction units
+    appear in both layers and were double-counted; (2) proposed capacity (7 GW of planned wind in the
+    Ceará box, mostly offshore filings) swamped operating capacity, so a cell sitting on a working
+    200 MW solar farm scored as energy-poor. Now:
+        nearby_renewable_mw_operating     operating units within radius_km
+        nearby_renewable_mw_construction  under construction (taken from the current layer only)
+        nearby_renewable_mw_proposed      announced / pre-construction (proposed layer only)
+        nearby_renewable_mw               the legacy total, kept for continuity = op + construction + proposed
+    and, for the occupancy check:
+        nearest_operating_plant_km / _name / _mw   nearest operating or under-construction unit >= occupied_min_mw
+        occupied_by_generation                      True when that unit is within occupied_radius_km of the cell centre
+    Occupancy is a review flag, not an exclusion: a point location cannot tell a 2 ha substation from a
+    200 ha solar field, so Phase 4 routes these cells to human review.
+    """
     grid = grid.copy()
     current = gpd.read_file(GEM_CURRENT_GPKG, layer="generators").to_crs("EPSG:4326")
     proposed = gpd.read_file(GEM_PROPOSED_GPKG, layer="proposed_generators").to_crs("EPSG:4326")
 
-    current["renewable_mw"] = np.where(current["technology"].isin(RENEWABLE_TECHS), pd.to_numeric(current["capacity_mw"], errors="coerce").fillna(0), 0)
-    proposed["renewable_mw"] = np.where(proposed["technology"].isin(RENEWABLE_TECHS), pd.to_numeric(proposed["capacity_mw"], errors="coerce").fillna(0), 0)
+    def status_group(df: gpd.GeoDataFrame, default: str) -> pd.Series:
+        st = df["status_norm"].astype(str).str.lower() if "status_norm" in df.columns else pd.Series(default, index=df.index)
+        return np.select([st.eq("operating"), st.eq("construction")], ["operating", "construction"], default="proposed")
+
+    current = current.copy()
+    current["status_group"] = status_group(current, "operating")
+    proposed = proposed.copy()
+    proposed["status_group"] = status_group(proposed, "proposed")
+    # under-construction units are listed in both layers: keep the current layer's copy only
+    proposed = proposed[proposed["status_group"] == "proposed"]
+
+    for df in (current, proposed):
+        df["capacity_mw"] = pd.to_numeric(df["capacity_mw"], errors="coerce").fillna(0)
+        df["renewable_mw"] = np.where(df["technology"].isin(RENEWABLE_TECHS), df["capacity_mw"], 0)
+        if "asset_name" not in df.columns:
+            df["asset_name"] = ""
     gen = pd.concat(
         [
-            current[["technology", "capacity_mw", "renewable_mw", "geometry"]],
-            proposed[["technology", "capacity_mw", "renewable_mw", "geometry"]],
+            current[["asset_name", "technology", "status_group", "capacity_mw", "renewable_mw", "geometry"]],
+            proposed[["asset_name", "technology", "status_group", "capacity_mw", "renewable_mw", "geometry"]],
         ],
         ignore_index=True,
     )
@@ -235,20 +266,39 @@ def add_generation_context(grid: gpd.GeoDataFrame, radius_km: float) -> gpd.GeoD
     buffers = cells_proj[["h3_id", "geometry"]].copy()
     buffers["geometry"] = buffers.geometry.centroid.buffer(radius_km * 1000)
     hits = gpd.sjoin(gen_proj, buffers, how="inner", predicate="within")
-    if hits.empty:
-        grid["nearby_renewable_mw"] = 0.0
-        grid["nearby_generation_asset_count"] = 0
-        return grid
 
-    agg = (
-        hits.groupby("h3_id", as_index=False)
-        .agg(
-            nearby_renewable_mw=("renewable_mw", "sum"),
-            nearby_generation_asset_count=("technology", "count"),
+    split_cols = ["nearby_renewable_mw_operating", "nearby_renewable_mw_construction", "nearby_renewable_mw_proposed"]
+    if hits.empty:
+        for col in split_cols + ["nearby_renewable_mw"]:
+            grid[col] = 0.0
+        grid["nearby_generation_asset_count"] = 0
+    else:
+        pivot = hits.pivot_table(index="h3_id", columns="status_group", values="renewable_mw", aggfunc="sum", fill_value=0.0)
+        for group, col in (("operating", split_cols[0]), ("construction", split_cols[1]), ("proposed", split_cols[2])):
+            pivot[col] = pivot[group] if group in pivot.columns else 0.0
+        pivot["nearby_renewable_mw"] = pivot[split_cols].sum(axis=1)
+        pivot["nearby_generation_asset_count"] = hits.groupby("h3_id")["technology"].count()
+        grid = grid.merge(pivot[split_cols + ["nearby_renewable_mw", "nearby_generation_asset_count"]].reset_index(), on="h3_id", how="left")
+        grid[split_cols + ["nearby_renewable_mw", "nearby_generation_asset_count"]] = grid[split_cols + ["nearby_renewable_mw", "nearby_generation_asset_count"]].fillna(0)
+
+    # occupancy: nearest operating / under-construction unit of at least occupied_min_mw to the cell centre
+    built = gen_proj[(gen_proj["status_group"].isin(["operating", "construction"])) & (gen_proj["capacity_mw"] >= occupied_min_mw)]
+    centres = cells_proj[["h3_id", "geometry"]].copy()
+    centres["geometry"] = centres.geometry.centroid
+    if built.empty:
+        grid["nearest_operating_plant_km"] = np.nan
+        grid["nearest_operating_plant_name"] = ""
+        grid["nearest_operating_plant_mw"] = np.nan
+    else:
+        near = gpd.sjoin_nearest(centres, built[["asset_name", "capacity_mw", "technology", "geometry"]], how="left", distance_col="_dist_m")
+        near = near.drop_duplicates("h3_id")
+        near["nearest_operating_plant_name"] = near["asset_name"].fillna("").astype(str) + " (" + near["technology"].fillna("").astype(str) + ")"
+        grid = grid.merge(
+            near[["h3_id", "_dist_m", "nearest_operating_plant_name", "capacity_mw"]].rename(columns={"_dist_m": "nearest_operating_plant_km", "capacity_mw": "nearest_operating_plant_mw"}),
+            on="h3_id", how="left",
         )
-    )
-    grid = grid.merge(agg, on="h3_id", how="left")
-    grid[["nearby_renewable_mw", "nearby_generation_asset_count"]] = grid[["nearby_renewable_mw", "nearby_generation_asset_count"]].fillna(0)
+        grid["nearest_operating_plant_km"] = grid["nearest_operating_plant_km"] / 1000.0
+    grid["occupied_by_generation"] = grid["nearest_operating_plant_km"].le(occupied_radius_km).fillna(False)
     return grid
 
 
@@ -283,7 +333,7 @@ def build_baseline(args: argparse.Namespace) -> tuple[gpd.GeoDataFrame, gpd.GeoD
     grid = add_state_and_exclusions(grid, territorial)
     grid = add_raster_features(grid)
     grid = add_infrastructure_features(grid)
-    grid = add_generation_context(grid, args.renewable_radius_km)
+    grid = add_generation_context(grid, args.renewable_radius_km, args.occupied_radius_km, args.occupied_min_mw)
     grid = add_curtailment_context(grid)
     grid["source_flags"] = json.dumps(
         {
@@ -331,6 +381,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--box-km-ns", type=float, default=None, help="North-south extent in kilometers; overrides --box-km.")
     parser.add_argument("--h3-resolution", type=int, default=8, help="H3 resolution.")
     parser.add_argument("--renewable-radius-km", type=float, default=25.0, help="Radius for nearby renewable generation aggregation.")
+    parser.add_argument("--occupied-radius-km", type=float, default=1.0, help="A cell whose centre is within this distance of an operating or under-construction plant is flagged occupied_by_generation (review, not exclusion).")
+    parser.add_argument("--occupied-min-mw", type=float, default=5.0, help="Smallest plant that counts for the occupancy flag.")
     return parser.parse_args()
 
 
@@ -367,9 +419,14 @@ def main() -> None:
         "nearest_ons_line_km",
         "nearest_idc_km",
         "nearby_renewable_mw",
+        "nearby_renewable_mw_operating",
+        "occupied_by_generation",
         "state_curtailed_mwh",
     ]
     print(grid[preview_cols].head(20).to_string(index=False))
+    print(f"occupied_by_generation: {int(grid['occupied_by_generation'].sum())} of {len(grid)} cells; "
+          f"operating renewable MW within radius: median {grid['nearby_renewable_mw_operating'].median():.0f}, max {grid['nearby_renewable_mw_operating'].max():.0f}; "
+          f"proposed: median {grid['nearby_renewable_mw_proposed'].median():.0f}, max {grid['nearby_renewable_mw_proposed'].max():.0f}")
 
 
 if __name__ == "__main__":
