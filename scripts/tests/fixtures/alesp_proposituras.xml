@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<proposituras>
+  <propositura><IdDocumento>1000001</IdDocumento><AnoLegislativo>2026</AnoLegislativo><NroLegislativo>0042</NroLegislativo><IdNatureza>7</IdNatureza><NaturezaSigla>PL</NaturezaSigla><Ementa>Institui a Política Estadual de Data Centers Sustentáveis.</Ementa><DtEntradaSistema>2026-03-03T00:00:00</DtEntradaSistema></propositura>
+  <propositura><IdDocumento>1000002</IdDocumento><AnoLegislativo>2026</AnoLegislativo><NroLegislativo>0043</NroLegislativo><IdNatureza>7</IdNatureza><NaturezaSigla>PL</NaturezaSigla><Ementa>Declara utilidade pública.</Ementa><DtEntradaSistema>2026-03-04T00:00:00</DtEntradaSistema></propositura>
+  <propositura><IdDocumento>900</IdDocumento><AnoLegislativo>2019</AnoLegislativo><NroLegislativo>1</NroLegislativo><NaturezaSigla>PL</NaturezaSigla><Ementa>Dispõe sobre centros de dados públicos.</Ementa></propositura>
+</proposituras>

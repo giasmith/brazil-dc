@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<srw:searchRetrieveResponse xmlns:srw="http://www.loc.gov/zing/srw/" xmlns:diag="http://www.loc.gov/zing/srw/diagnostic/">
+  <srw:version>1.1</srw:version>
+  <srw:numberOfRecords>0</srw:numberOfRecords>
+  <srw:diagnostics><diag:diagnostic><diag:uri>info:srw/diagnostic/1/10</diag:uri><diag:message>Query syntax error</diag:message></diag:diagnostic></srw:diagnostics>
+</srw:searchRetrieveResponse>

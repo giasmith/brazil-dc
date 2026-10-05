@@ -1,0 +1,13 @@
+{
+  "dados": [
+    {"id": 2600838, "uri": "https://dadosabertos.camara.leg.br/api/v2/proposicoes/2600838", "siglaTipo": "PL", "codTipo": 139, "numero": 278, "ano": 2026, "ementa": "Altera a Lei nº 11.196, de 21 de novembro de 2005, para instituir o Regime Especial de Tributação para Serviços de Datacenter (Redata), e a Lei nº 15.211, de 17 de setembro de 2025.", "dataApresentacao": "2026-02-25T10:00"},
+    {"id": 2700001, "uri": "https://dadosabertos.camara.leg.br/api/v2/proposicoes/2700001", "siglaTipo": "PL", "codTipo": 139, "numero": 5209, "ano": 2026, "ementa": "Estabelece normas gerais específicas para o licenciamento ambiental de centros de dados.", "dataApresentacao": "2026-08-12T14:31"},
+    {"id": 2700002, "uri": "https://dadosabertos.camara.leg.br/api/v2/proposicoes/2700002", "siglaTipo": "PL", "codTipo": 139, "numero": 9999, "ano": 2026, "ementa": "Dispõe sobre a tarifa social de energia elétrica.", "dataApresentacao": "2026-08-13T09:00"}
+  ],
+  "links": [
+    {"rel": "self", "href": "https://dadosabertos.camara.leg.br/api/v2/proposicoes?keywords=data%20center&pagina=1&itens=100"},
+    {"rel": "next", "href": "https://dadosabertos.camara.leg.br/api/v2/proposicoes?keywords=data%20center&pagina=2&itens=100"},
+    {"rel": "first", "href": "https://dadosabertos.camara.leg.br/api/v2/proposicoes?keywords=data%20center&pagina=1&itens=100"},
+    {"rel": "last", "href": "https://dadosabertos.camara.leg.br/api/v2/proposicoes?keywords=data%20center&pagina=2&itens=100"}
+  ]
+}

@@ -1,8 +1,8 @@
 {
   "corpus_name": "SCN Phase 3 ReData and land-protection policy corpus",
   "generated_for": "Sovereign Compute Nexus Phase 3 bounded policy classifier",
-  "last_updated": "2026-05-28",
-  "research_note": "This is the curated working corpus used to frame ReData as a data-center incentive problem constrained by Brazilian environmental, indigenous, protected-land, and consultation law. Journal entries were identified from publisher/DOI pages because the scite MCP was unavailable due to account usage limits.",
+  "last_updated": "2026-09-23",
+  "research_note": "This is the curated working corpus used to frame ReData as a data-center incentive problem constrained by Brazilian environmental, indigenous, protected-land, and consultation law. Journal entries were identified from publisher/DOI pages because the scite MCP was unavailable due to account usage limits. 2026-09-23 update: MP 1.318/2025 is recorded as lapsed and Lei 15.504/2026 (sanctioned 2026-09-15) as the Redata law in force; Lei 15.190/2025 (licensing), Decreto 12.772/2025 (PNAST), ANEEL REN 1.122/2025, Anatel Res. 780/2025 + Acordao 58/2026, CONAMA Mocao 147/2026, Convenio ICMS 38/2026 and three 2026 Camara bills were added. Every document now carries a lifecycle 'status'; entries marked 'unverified' or with a status_note saying a URL/date was not opened must be checked before publication. scripts/build_policy_corpus.py validate-corpus enforces the schema.",
   "documents": [
     {
       "id": "REDATA_MPV_1318_2025",
@@ -13,7 +13,53 @@
       "issuer": "Presidencia da Republica / Planalto",
       "date": "2025-09-17",
       "url": "https://www.planalto.gov.br/ccivil_03/_ato2023-2026/2025/mpv/mpv1318.htm",
-      "phase3_use": "Defines REDATA eligibility, clean/renewable energy commitments, sustainability criteria, domestic capacity obligations, and fiscal-benefit structure."
+      "phase3_use": "LAPSED. Defined the first version of REDATA eligibility, clean/renewable energy commitments, sustainability criteria, domestic capacity obligations, and fiscal-benefit structure.",
+      "status": "lapsed",
+      "urn": "urn:lex:br:federal:medida.provisoria:2025-09-17;1318",
+      "status_note": "Lost validity without conversion into law (Senado Notícias, 2026-09-16). Keep for the policy rationale; do not treat as the incentive in force.",
+      "relations": [
+        {
+          "type": "amends",
+          "target": "urn:lex:br:federal:lei:2005-11-21;11196",
+          "evidence": "MP text (Lei 11.196/2005, Lei do Bem)"
+        }
+      ]
+    },
+    {
+      "id": "LEI_15504_2026_REDATA",
+      "category": "redata_core_law",
+      "type": "federal_law",
+      "jurisdiction": "Brazil federal",
+      "title": "Lei No. 15.504/2026 - Regime Especial de Tributacao para Servicos de Datacenter (Redata)",
+      "issuer": "Presidencia da Republica / Planalto",
+      "date": "2026-09-15",
+      "url": "https://www.planalto.gov.br/ccivil_03/_ato2023-2026/2026/lei/l15504.htm",
+      "urn": "urn:lex:br:federal:lei:2026-09-15;15504",
+      "status": "in_force",
+      "status_note": "Sanctioned 2026-09-15, published in the DOU 2026-09-16. No VETADO markers in the Planalto text on 2026-09-23. Regulating decree pending (art. 11-B §8, art. 11-C §§4-6).",
+      "phase3_use": "The incentive in force. Eligibility (art. 11-B §1): 100% of electricity demand contracted from renewable/low-emission generation; Water Usage Effectiveness <= 0.05 L/kWh for cooling, measured annually; >= 10% of effective supply to the domestic market; 2% of the value of acquired products into R&D&I. North/Northeast/Center-West projects get a 20% reduction of the commitments (art. 11-B §7). Art. 11-J: five-year term, but the PIS/Pasep, Cofins and IPI benefits 'produzirao efeitos ate 31 de dezembro de 2026' (tax-reform transition to CBS/IBS) - verify this reading before modelling incentive duration. Amends Lei 11.196/2005 and Lei 15.211/2025.",
+      "relations": [
+        {
+          "type": "converted_from",
+          "target": "REDATA_PL_278_2026_SENADO",
+          "evidence": "Senado Notícias 2026-09-16"
+        },
+        {
+          "type": "replaces",
+          "target": "REDATA_MPV_1318_2025",
+          "evidence": "same regime; MP lapsed"
+        },
+        {
+          "type": "amends",
+          "target": "urn:lex:br:federal:lei:2005-11-21;11196",
+          "evidence": "ementa"
+        },
+        {
+          "type": "amends",
+          "target": "urn:lex:br:federal:lei:2025-09-17;15211",
+          "evidence": "ementa (art. 3 adds art. 36-A to Lei 15.211/2025)"
+        }
+      ]
     },
     {
       "id": "REDATA_EXM_1318_2025",
@@ -24,7 +70,8 @@
       "issuer": "Planalto / Federal ministries",
       "date": "2025",
       "url": "https://www.planalto.gov.br/ccivil_03/_ato2023-2026/2025/Exm/Exm-1318-25.pdf",
-      "phase3_use": "Explains REDATA policy rationale, including data-center attraction, energy, water-efficiency, and sustainability conditions."
+      "phase3_use": "Explains REDATA policy rationale, including data-center attraction, energy, water-efficiency, and sustainability conditions.",
+      "status": "published"
     },
     {
       "id": "REDATA_PL_278_2026_SENADO",
@@ -35,7 +82,23 @@
       "issuer": "Senado Federal",
       "date": "2026-02-25",
       "url": "https://www25.senado.leg.br/web/atividade/materias/-/materia/172786",
-      "phase3_use": "Tracks the post-MPV legislative vehicle for REDATA and amendments, including water reuse, energy-source, ZPE, and data-center eligibility debates."
+      "phase3_use": "ENACTED as Lei 15.504/2026. Tracks the post-MPV legislative vehicle for REDATA and amendments, including water reuse, energy-source, ZPE, and data-center eligibility debates.",
+      "status": "enacted",
+      "status_note": "Approved by the Senate on 2026-09-01 and sanctioned as Lei 15.504/2026 (Senado Notícias 2026-09-16). Senado /processo id 172786; Câmara idProposicao 2600838.",
+      "camara_url": "https://www.camara.leg.br/proposicoesWeb/fichadetramitacao?idProposicao=2600838",
+      "senado_codigo_materia": 172786,
+      "relations": [
+        {
+          "type": "enacted_as",
+          "target": "LEI_15504_2026_REDATA",
+          "evidence": "Senado Notícias 2026-09-16; ementa identical"
+        },
+        {
+          "type": "replaces",
+          "target": "REDATA_MPV_1318_2025",
+          "evidence": "PL 278/2026 re-introduced the Redata regime after MP 1.318/2025 lapsed"
+        }
+      ]
     },
     {
       "id": "REDATA_CAMARA_APPROVAL_2026",
@@ -46,7 +109,8 @@
       "issuer": "Camara dos Deputados",
       "date": "2026-02-25",
       "url": "https://www.camara.leg.br/noticias/1247282-camara-aprova-incentivo-fiscal-para-investimentos-em-centros-de-processamento-de-dados",
-      "phase3_use": "Summarizes House approval, benefit structure, clean/renewable energy condition, and Senate referral."
+      "phase3_use": "Summarizes House approval, benefit structure, clean/renewable energy condition, and Senate referral.",
+      "status": "published"
     },
     {
       "id": "REDATA_RECEITA_NOTA_052_2025",
@@ -57,7 +121,8 @@
       "issuer": "Receita Federal",
       "date": "2025-12-23",
       "url": "https://www.gov.br/receitafederal/pt-br/centrais-de-conteudo/publicacoes/estudos/notas-cetad/notas-tecnicas/2025/nota-cetad-coest-no-052-2025/view",
-      "phase3_use": "Documents the fiscal framing and budget-cost estimates for REDATA."
+      "phase3_use": "Documents the fiscal framing and budget-cost estimates for REDATA.",
+      "status": "published"
     },
     {
       "id": "REDATA_FAZENDA_NOTICE_2025",
@@ -68,7 +133,8 @@
       "issuer": "Ministerio da Fazenda",
       "date": "2025-09-17",
       "url": "https://www.gov.br/fazenda/pt-br/assuntos/noticias/2025/setembro/medida-provisoria-cria-o-redata-que-estimula-datacenters-e-impulsiona-economia-digital-no-brasil/",
-      "phase3_use": "Provides official policy framing linking REDATA to PNDC, digital sovereignty, and strategic industrial policy."
+      "phase3_use": "Provides official policy framing linking REDATA to PNDC, digital sovereignty, and strategic industrial policy.",
+      "status": "published"
     },
     {
       "id": "REDATA_MDIC_NOTICE_2025",
@@ -79,7 +145,8 @@
       "issuer": "Ministerio do Desenvolvimento, Industria, Comercio e Servicos",
       "date": "2025-09",
       "url": "https://www.gov.br/mdic/pt-br/assuntos/noticias/2025/setembro/mp-cria-o-redata-que-estimula-datacenters-e-impulsiona-economia-digital-no-brasil",
-      "phase3_use": "Records participating ministries and policy intent behind REDATA."
+      "phase3_use": "Records participating ministries and policy intent behind REDATA.",
+      "status": "published"
     },
     {
       "id": "REDATA_MME_POLICY_PAGE",
@@ -90,7 +157,8 @@
       "issuer": "Ministerio de Minas e Energia",
       "date": "2026",
       "url": "https://www.gov.br/mme/pt-br/a-revolucao-brasileira-em-energia-e-mineracao/energia-eletrica/redata-politica-de-acesso-e-incentivos-para-data-centers",
-      "phase3_use": "Links REDATA to clean/renewable energy, curtailment absorption, and siting near renewable generation."
+      "phase3_use": "Links REDATA to clean/renewable energy, curtailment absorption, and siting near renewable generation.",
+      "status": "published"
     },
     {
       "id": "REDATA_MMA_CONSULTATION_2025",
@@ -101,7 +169,9 @@
       "issuer": "Ministerio do Meio Ambiente e Mudanca do Clima",
       "date": "2025-10-01",
       "url": "https://www.gov.br/mma/pt-br/noticias/consulta-publica-sobre-regulamentacao-de-regime-especial-para-datacenters-debate-criterios-e-indicadores-de-sustentabilidade-para-o-setor/",
-      "phase3_use": "Establishes that sustainability indicators for REDATA are a formal regulatory design issue."
+      "phase3_use": "Establishes that sustainability indicators for REDATA are a formal regulatory design issue.",
+      "status": "unknown",
+      "status_note": "Consultation notice; whether the window closed and what norm resulted was not verified on 2026-09-23."
     },
     {
       "id": "REDATA_MDIC_SUBSIDIES_2025",
@@ -112,7 +182,9 @@
       "issuer": "Ministerio do Desenvolvimento, Industria, Comercio e Servicos",
       "date": "2025-10",
       "url": "https://www.gov.br/mdic/pt-br/assuntos/noticias/2025/outubro/mdic-abre-consulta-para-definir-lista-de-equipamentos-de-data-centers-elegiveis-ao-redata",
-      "phase3_use": "Connects eligible equipment and environmental sustainability criteria to REDATA implementation."
+      "phase3_use": "Connects eligible equipment and environmental sustainability criteria to REDATA implementation.",
+      "status": "unknown",
+      "status_note": "Consultation notice; whether the window closed and what norm resulted was not verified on 2026-09-23."
     },
     {
       "id": "ANATEL_WHITE_PAPER_DATACENTERS_2025",
@@ -123,7 +195,8 @@
       "issuer": "Agencia Nacional de Telecomunicacoes",
       "date": "2025",
       "url": "https://www.gov.br/anatel/pt-br/assuntos/noticias/anatel-lanca-white-paper-sobre-o-papel-estrategico-dos-data-centers-no-ecossistema-digital-brasileiro/white-paper.pdf/%40%40download/file",
-      "phase3_use": "Frames data centers as strategic infrastructure and supports the digital-sovereignty rationale."
+      "phase3_use": "Frames data centers as strategic infrastructure and supports the digital-sovereignty rationale.",
+      "status": "published"
     },
     {
       "id": "ANATEL_CONFORMITY_CP_DATACENTERS_2025",
@@ -134,7 +207,9 @@
       "issuer": "Agencia Nacional de Telecomunicacoes",
       "date": "2025",
       "url": "https://www.gov.br/anatel/pt-br/assuntos/noticias/anatel-inicia-consulta-publica-sobre-requisitos-de-avaliacao-da-conformidade-para-data-centers-que-integram-as-redes-de-telecomunicacoes",
-      "phase3_use": "Adds telecom-network conformity, safety, efficiency, and sustainability criteria to the data-center governance context."
+      "phase3_use": "Adds telecom-network conformity, safety, efficiency, and sustainability criteria to the data-center governance context.",
+      "status": "unknown",
+      "status_note": "Consultation notice; whether the window closed and what norm resulted was not verified on 2026-09-23."
     },
     {
       "id": "CF_1988_ARTS_225_231",
@@ -145,7 +220,8 @@
       "issuer": "Planalto",
       "date": "1988",
       "url": "https://www.planalto.gov.br/ccivil_03/Constituicao/constituicaocompilado.htm",
-      "phase3_use": "Constitutional foundation for environmental protection and original indigenous territorial rights."
+      "phase3_use": "Constitutional foundation for environmental protection and original indigenous territorial rights.",
+      "status": "in_force"
     },
     {
       "id": "LEI_6001_1973_ESTATUTO_INDIO",
@@ -156,7 +232,9 @@
       "issuer": "Planalto",
       "date": "1973-12-19",
       "url": "https://www.planalto.gov.br/ccivil_03/leis/l6001.htm",
-      "phase3_use": "Defines the statutory indigenous-law baseline referenced by later demarcation and Marco Temporal instruments."
+      "phase3_use": "Defines the statutory indigenous-law baseline referenced by later demarcation and Marco Temporal instruments.",
+      "status": "in_force",
+      "urn": "urn:lex:br:federal:lei:1973-12-19;6001"
     },
     {
       "id": "DECRETO_1775_1996_DEMARCACAO_TI",
@@ -167,7 +245,9 @@
       "issuer": "Planalto",
       "date": "1996-01-08",
       "url": "https://www.planalto.gov.br/ccivil_03/decreto/D1775.htm",
-      "phase3_use": "Defines demarcation stages and legal process, supporting human-review buffers around unresolved or nearby indigenous boundaries."
+      "phase3_use": "Defines demarcation stages and legal process, supporting human-review buffers around unresolved or nearby indigenous boundaries.",
+      "status": "in_force",
+      "urn": "urn:lex:br:federal:decreto:1996-01-08;1775"
     },
     {
       "id": "FUNAI_DEMARCACAO_PROCESSO",
@@ -178,7 +258,8 @@
       "issuer": "FUNAI",
       "date": "updated",
       "url": "https://www.gov.br/funai/pt-br/atuacao/terras-indigenas/demarcacao-de-terras-indigenas/entenda-o-processo-de-demarcacao",
-      "phase3_use": "Operational guidance on demarcation phases, isolated peoples, and restriction-of-use protections."
+      "phase3_use": "Operational guidance on demarcation phases, isolated peoples, and restriction-of-use protections.",
+      "status": "published"
     },
     {
       "id": "FUNAI_TERRA_INDIGENA_O_QUE_E",
@@ -189,7 +270,8 @@
       "issuer": "FUNAI",
       "date": "updated",
       "url": "https://www.gov.br/funai/pt-br/atuacao/terras-indigenas/demarcacao-de-terras-indigenas/terras-indigenas-o-que-e",
-      "phase3_use": "Defines indigenous land as protected for permanent possession and exclusive usufruct."
+      "phase3_use": "Defines indigenous land as protected for permanent possession and exclusive usufruct.",
+      "status": "published"
     },
     {
       "id": "LEI_14701_2023_MARCO_TEMPORAL",
@@ -200,7 +282,10 @@
       "issuer": "Planalto",
       "date": "2023-10-20",
       "url": "https://www.planalto.gov.br/ccivil_03/_ato2023-2026/2023/lei/l14701.htm",
-      "phase3_use": "Used to justify precaution for contested or legally unstable indigenous-land boundaries."
+      "phase3_use": "Used to justify precaution for contested or legally unstable indigenous-land boundaries.",
+      "status": "in_force",
+      "litigation_note": "Challenged at the STF (ADIs against Lei 14.701/2023); text remains in force. Phase 3 treats contested boundaries as precautionary (Medium/Critical), not as settled.",
+      "urn": "urn:lex:br:federal:lei:2023-10-20;14701"
     },
     {
       "id": "DECRETO_10088_2019_OIT_169",
@@ -211,7 +296,9 @@
       "issuer": "Planalto",
       "date": "2019-11-05",
       "url": "https://www.planalto.gov.br/ccivil_03/_Ato2019-2022/2019/Decreto/D10088.htm",
-      "phase3_use": "Anchors free, prior, and informed consultation obligations for indigenous and tribal peoples."
+      "phase3_use": "Anchors free, prior, and informed consultation obligations for indigenous and tribal peoples.",
+      "status": "in_force",
+      "urn": "urn:lex:br:federal:decreto:2019-11-05;10088"
     },
     {
       "id": "FUNAI_CONSULTA_PREVIA_2025",
@@ -222,7 +309,8 @@
       "issuer": "FUNAI",
       "date": "2025",
       "url": "https://www.gov.br/funai/pt-br/assuntos/noticias/2025/participacao-das-comunidades-indigenas-deve-ocorrer-em-todas-as-fases-do-processo-de-consulta-reforca-funai-em-paris",
-      "phase3_use": "Supports human-review flags around projects affecting indigenous lands, territories, water, and resources."
+      "phase3_use": "Supports human-review flags around projects affecting indigenous lands, territories, water, and resources.",
+      "status": "published"
     },
     {
       "id": "DECRETO_6040_2007_PNPCT",
@@ -233,7 +321,9 @@
       "issuer": "Planalto",
       "date": "2007-02-07",
       "url": "https://planalto.gov.br/ccivil_03/_ato2007-2010/2007/decreto/D6040.htm",
-      "phase3_use": "Extends policy concern to traditional communities beyond demarcated indigenous lands."
+      "phase3_use": "Extends policy concern to traditional communities beyond demarcated indigenous lands.",
+      "status": "in_force",
+      "urn": "urn:lex:br:federal:decreto:2007-02-07;6040"
     },
     {
       "id": "DECRETO_7747_2012_PNGATI",
@@ -244,7 +334,9 @@
       "issuer": "Planalto",
       "date": "2012-06-05",
       "url": "https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2012/decreto/D7747.htm",
-      "phase3_use": "Justifies using participatory mapping, etnomapping, and environmental management concepts in boundary-risk review."
+      "phase3_use": "Justifies using participatory mapping, etnomapping, and environmental management concepts in boundary-risk review.",
+      "status": "in_force",
+      "urn": "urn:lex:br:federal:decreto:2012-06-05;7747"
     },
     {
       "id": "LEI_9985_2000_SNUC",
@@ -255,7 +347,9 @@
       "issuer": "Planalto",
       "date": "2000-07-18",
       "url": "https://www.planalto.gov.br/ccivil_03/LEIS/L9985.htm",
-      "phase3_use": "Defines Brazilian conservation-unit categories and legal basis for protected-land exclusion."
+      "phase3_use": "Defines Brazilian conservation-unit categories and legal basis for protected-land exclusion.",
+      "status": "in_force",
+      "urn": "urn:lex:br:federal:lei:2000-07-18;9985"
     },
     {
       "id": "DECRETO_4340_2002_SNUC",
@@ -266,7 +360,9 @@
       "issuer": "Planalto",
       "date": "2002-08-22",
       "url": "https://www.planalto.gov.br/ccivil_03/decreto/2002/D4340.htm",
-      "phase3_use": "Operationalizes SNUC management plans, councils, mosaics, and implementation details."
+      "phase3_use": "Operationalizes SNUC management plans, councils, mosaics, and implementation details.",
+      "status": "in_force",
+      "urn": "urn:lex:br:federal:decreto:2002-08-22;4340"
     },
     {
       "id": "CONAMA_428_2010_UC_LICENSING",
@@ -277,7 +373,8 @@
       "issuer": "CONAMA / MMA",
       "date": "2010-12-17",
       "url": "https://www.icmbio.gov.br/cepsul/images/stories/legislacao/Resolucao/2010/res_conama_428-2010_licenc_amb_uc.pdf",
-      "phase3_use": "Supports review buffers for significant-impact projects affecting conservation units or buffer zones."
+      "phase3_use": "Supports review buffers for significant-impact projects affecting conservation units or buffer zones.",
+      "status": "in_force"
     },
     {
       "id": "LEI_6938_1981_PNMA",
@@ -288,7 +385,9 @@
       "issuer": "Planalto",
       "date": "1981-08-31",
       "url": "https://www.planalto.gov.br/ccivil_03/LEIS/L6938compilada.htm",
-      "phase3_use": "General basis for environmental policy, protected spaces, liability, and licensing logic."
+      "phase3_use": "General basis for environmental policy, protected spaces, liability, and licensing logic.",
+      "status": "in_force",
+      "urn": "urn:lex:br:federal:lei:1981-08-31;6938"
     },
     {
       "id": "LC_140_2011_LICENSING_COMPETENCE",
@@ -299,7 +398,9 @@
       "issuer": "Planalto",
       "date": "2011-12-08",
       "url": "https://www.planalto.gov.br/ccivil_03/LEIS/LCP/Lcp140.htm",
-      "phase3_use": "Clarifies federal/state/municipal environmental-licensing competence."
+      "phase3_use": "Clarifies federal/state/municipal environmental-licensing competence.",
+      "status": "in_force",
+      "urn": "urn:lex:br:federal:lei.complementar:2011-12-08;140"
     },
     {
       "id": "QIN_2023_NATURE_SUSTAINABILITY",
@@ -311,7 +412,8 @@
       "year": "2023",
       "doi": "10.1038/s41893-022-01018-z",
       "url": "https://www.nature.com/articles/s41893-022-01018-z",
-      "phase3_use": "Empirical evidence that Indigenous territories and protected areas are central forest-conservation governance regimes."
+      "phase3_use": "Empirical evidence that Indigenous territories and protected areas are central forest-conservation governance regimes.",
+      "status": "published"
     },
     {
       "id": "LIMA_2024_BIOLOGICAL_CONSERVATION",
@@ -323,7 +425,8 @@
       "year": "2024",
       "doi": "10.1016/j.biocon.2024.110739",
       "url": "https://doi.org/10.1016/j.biocon.2024.110739",
-      "phase3_use": "Supports treating Marco Temporal as a biodiversity and climate-risk stressor."
+      "phase3_use": "Supports treating Marco Temporal as a biodiversity and climate-risk stressor.",
+      "status": "published"
     },
     {
       "id": "UMBELINO_2025_TROPICAL_CONSERVATION_SCIENCE",
@@ -335,7 +438,8 @@
       "year": "2025",
       "doi": "10.1177/19400829251316799",
       "url": "https://journals.sagepub.com/doi/abs/10.1177/19400829251316799",
-      "phase3_use": "Supports precautionary treatment of Marco Temporal and indigenous-land fragmentation risks."
+      "phase3_use": "Supports precautionary treatment of Marco Temporal and indigenous-land fragmentation risks.",
+      "status": "published"
     },
     {
       "id": "FERRANTE_2020_LAND_USE_POLICY",
@@ -347,7 +451,8 @@
       "year": "2020",
       "doi": "10.1016/j.landusepol.2020.104694",
       "url": "https://doi.org/10.1016/j.landusepol.2020.104694",
-      "phase3_use": "Supports treating indigenous lands as socio-ecological and ethnocultural protection zones."
+      "phase3_use": "Supports treating indigenous lands as socio-ecological and ethnocultural protection zones.",
+      "status": "published"
     },
     {
       "id": "RESENDE_2021_ECOSYSTEM_SERVICES",
@@ -359,7 +464,8 @@
       "year": "2021",
       "doi": "10.1016/j.ecoser.2021.101282",
       "url": "https://doi.org/10.1016/j.ecoser.2021.101282",
-      "phase3_use": "Supports hard constraints and review buffers in non-Amazon biomes, especially Cerrado-like policy contexts."
+      "phase3_use": "Supports hard constraints and review buffers in non-Amazon biomes, especially Cerrado-like policy contexts.",
+      "status": "published"
     },
     {
       "id": "BENYISHAY_2017_JEEM",
@@ -371,7 +477,8 @@
       "year": "2017",
       "doi": "10.1016/j.jeem.2017.07.008",
       "url": "https://doi.org/10.1016/j.jeem.2017.07.008",
-      "phase3_use": "Supports the link between land-rights formalization and environmental outcomes."
+      "phase3_use": "Supports the link between land-rights formalization and environmental outcomes.",
+      "status": "published"
     },
     {
       "id": "NOLTE_2013_PNAS",
@@ -383,7 +490,8 @@
       "year": "2013",
       "doi": "10.1073/pnas.1214786110",
       "url": "https://doi.org/10.1073/pnas.1214786110",
-      "phase3_use": "Supports governance-regime sensitivity in protected-area effectiveness."
+      "phase3_use": "Supports governance-regime sensitivity in protected-area effectiveness.",
+      "status": "published"
     },
     {
       "id": "DAWSON_2021_ECOLOGY_SOCIETY",
@@ -395,7 +503,8 @@
       "year": "2021",
       "doi": "10.5751/ES-12625-260319",
       "url": "https://doi.org/10.5751/ES-12625-260319",
-      "phase3_use": "Supports participatory and equity-centered conservation constraints."
+      "phase3_use": "Supports participatory and equity-centered conservation constraints.",
+      "status": "published"
     },
     {
       "id": "GARNETT_2018_NATURE_SUSTAINABILITY",
@@ -407,7 +516,217 @@
       "year": "2018",
       "doi": "10.1038/s41893-018-0100-6",
       "url": "https://doi.org/10.1038/s41893-018-0100-6",
-      "phase3_use": "Supports the global conservation significance of indigenous lands."
+      "phase3_use": "Supports the global conservation significance of indigenous lands.",
+      "status": "published"
+    },
+    {
+      "id": "LEI_15190_2025_LICENCIAMENTO_AMBIENTAL",
+      "category": "environmental_licensing",
+      "type": "federal_law",
+      "jurisdiction": "Brazil federal",
+      "title": "Lei No. 15.190/2025 - Lei Geral do Licenciamento Ambiental",
+      "issuer": "Presidencia da Republica / Planalto; Congresso Nacional (partes promulgadas apos derrubada de vetos)",
+      "date": "2025-08-08",
+      "url": "https://www.planalto.gov.br/ccivil_03/_ato2023-2026/2025/lei/l15190.htm",
+      "urn": "urn:lex:br:federal:lei:2025;15190",
+      "status": "veto_overridden",
+      "text_variant": "veto_override_promulgation",
+      "status_note": "Sanctioned with vetoes in Aug 2025; Congress overrode 52 veto items on 2025-11-27 (Senado Notícias); in force since Feb 2026 with ADIs pending at the STF (Agência Brasil, 2026-02). Two texts exist: as sanctioned and as promulgated after the override - cite the compiled text. Sanction day (08) and URL casing not re-verified on 2026-09-23.",
+      "phase3_use": "Replaces the licensing baseline Phase 3 assumed from LC 140/2011 + CONAMA 428/2010 alone: licenca por adesao e compromisso (LAC), licenca ambiental especial (LAE) for strategic projects, and changed rules for consultation of UC managers and buffer zones. Re-derive the Critical/Medium licensing triggers from this text; PL 5209/2026 would add data-center-specific licensing rules on top of it.",
+      "relations": [
+        {
+          "type": "cites",
+          "target": "LC_140_2011_LICENSING_COMPETENCE",
+          "evidence": "competence framework"
+        },
+        {
+          "type": "cites",
+          "target": "CONAMA_428_2010_UC_LICENSING",
+          "evidence": "UC/buffer consultation rules affected"
+        }
+      ]
+    },
+    {
+      "id": "DECRETO_12772_2025_PNAST",
+      "category": "redata_energy_siting",
+      "type": "federal_decree",
+      "jurisdiction": "Brazil federal",
+      "title": "Decreto No. 12.772/2025 - Politica Nacional de Acesso ao Sistema de Transmissao (PNAST)",
+      "issuer": "Presidencia da Republica / MME",
+      "date": "2025-12-08",
+      "url": "https://www.planalto.gov.br/ccivil_03/_ato2023-2026/2025/decreto/D12772.htm",
+      "urn": "urn:lex:br:federal:decreto:2025;12772",
+      "status": "in_force",
+      "status_note": "Published 2025-12-08 (Agência iNFRA). Planalto URL follows the standard pattern but was not opened on 2026-09-23; decree date may be a few days before publication.",
+      "phase3_use": "Transmission access becomes a competitive process: demands are registered with the ONS in 'access seasons' and auctioned, with a 10-month transition for prior requests. ONS reported 38 access requests totalling 7,040 MW from data centers (Conjur, 2026-08-20). For Phase 4 this turns grid proximity from a distance feature into an access-scarcity constraint.",
+      "relations": []
+    },
+    {
+      "id": "ANEEL_REN_1122_2025_GRANDES_CARGAS",
+      "category": "redata_energy_siting",
+      "type": "regulatory_resolution",
+      "jurisdiction": "Brazil federal",
+      "title": "Resolucao Normativa ANEEL No. 1.122/2025 - garantias financeiras e prazos para acesso de grandes cargas a Rede Basica",
+      "issuer": "ANEEL",
+      "date": "2025-05-20",
+      "url": "https://www2.aneel.gov.br/cedoc/ren20251122.html",
+      "status": "in_force",
+      "status_note": "Approved 2025-05-20; effective 2026-01-01 (guarantee requirements immediately). URL follows the ANEEL CEDOC pattern and was not opened on 2026-09-23 - confirm. Summary source: Campos Mello Advogados.",
+      "phase3_use": "Access to the transmission grid now requires financial guarantees (GPA = 3 months of TUST at the access request; GPC = 3 years of EUST before contracting; GMI = 3 years of EUST for interest beyond the 4-year horizon), a 90-day window to sign the CCT and a single 12-month MUST postponement. A candidate site without a guaranteed connection is not grid-ready; use as a Medium trigger where connection status is unknown.",
+      "relations": []
+    },
+    {
+      "id": "ANATEL_RES_780_2025_CONFORMIDADE_DC",
+      "category": "digital_infrastructure_policy",
+      "type": "regulatory_resolution",
+      "jurisdiction": "Brazil federal",
+      "title": "Resolucao Anatel No. 780/2025 - avaliacao da conformidade de data centers integrados as redes de telecomunicacoes",
+      "issuer": "Anatel",
+      "date": "2025",
+      "url": "https://informacoes.anatel.gov.br/legislacao/resolucoes/2025",
+      "status": "in_force",
+      "status_note": "Art. 6 had its enforceability suspended by Anatel Acordao 58/2026 (Conjur, 2026-08-20). Listing URL only; resolution page not opened on 2026-09-23.",
+      "phase3_use": "Data centers connected to telecom networks fall under Anatel conformity assessment (safety, efficiency, sustainability). Shows that a regulatory instrument can be partially suspended by the agency's own board - the corpus needs a status per article, not per act, when this matters.",
+      "relations": [
+        {
+          "type": "suspended_by",
+          "target": "ANATEL_ACORDAO_58_2026",
+          "evidence": "Conjur 2026-08-20: Acordao 58/2026 suspended the enforceability of art. 6"
+        },
+        {
+          "type": "derived_from_consultation",
+          "target": "ANATEL_CONFORMITY_CP_DATACENTERS_2025",
+          "evidence": "2025 public consultation on conformity requirements"
+        }
+      ]
+    },
+    {
+      "id": "ANATEL_ACORDAO_58_2026",
+      "category": "digital_infrastructure_policy",
+      "type": "regulatory_act",
+      "jurisdiction": "Brazil federal",
+      "title": "Acordao Anatel No. 58/2026 - suspensao da exigibilidade do art. 6 da Resolucao 780/2025",
+      "issuer": "Anatel (Conselho Diretor)",
+      "date": "2026",
+      "url": "https://conjur.com.br/2026-ago-20/brasil-regula-os-data-centers-aos-pedacos/",
+      "status": "published",
+      "status_note": "Evidence is secondary (Conjur). Replace the URL with the Anatel SEI/biblioteca link once located.",
+      "phase3_use": "Status evidence for ANATEL_RES_780_2025_CONFORMIDADE_DC.",
+      "relations": []
+    },
+    {
+      "id": "CONAMA_MOCAO_147_2026_DATACENTERS",
+      "category": "environmental_licensing",
+      "type": "regulatory_act",
+      "jurisdiction": "Brazil federal",
+      "title": "Mocao CONAMA No. 147/2026 - urgencia de diretrizes nacionais para o licenciamento de data centers",
+      "issuer": "CONAMA / MMA",
+      "date": "2026",
+      "url": "https://conjur.com.br/2026-ago-20/brasil-regula-os-data-centers-aos-pedacos/",
+      "status": "published",
+      "status_note": "A mocao is a recommendation, not a norm. Evidence is secondary (Conjur); locate the CONAMA page.",
+      "phase3_use": "Signals that data-center-specific licensing guidance is expected; until it exists, Phase 3 keeps the generic licensing triggers.",
+      "relations": []
+    },
+    {
+      "id": "CONFAZ_CONVENIO_ICMS_38_2026",
+      "category": "redata_state_fiscal",
+      "type": "state_fiscal_agreement",
+      "jurisdiction": "Brazil states (CONFAZ)",
+      "title": "Convenio ICMS No. 38/2026 - CONFAZ (autorizacao de reducao de ICMS para equipamentos de data centers)",
+      "issuer": "CONFAZ",
+      "date": "2026-04-06",
+      "url": "https://www.confaz.fazenda.gov.br/legislacao/convenios/2026/CV038_26",
+      "status": "unverified",
+      "status_note": "Content NOT read on 2026-09-23 (LegisWeb copy rate-limited; CONFAZ page not fetched). Press (Convergencia Digital, Poder360, BNamericas): ~90% ICMS reduction on data-center equipment, adopted state by state; RS, CE, MG and SP reported favourable, RJ resistant. URL follows the CONFAZ CVnnn_yy pattern.",
+      "phase3_use": "The state-adoption field is the incentive geography: federal Redata does not imply ICMS relief in a given state. Record per-state adhesion (and later 'adesao' convenios) before using fiscal incentives as an opportunity layer.",
+      "relations": [
+        {
+          "type": "cites",
+          "target": "LEI_15504_2026_REDATA",
+          "evidence": "complements the federal regime at the state level"
+        }
+      ]
+    },
+    {
+      "id": "PL_5209_2026_LICENCIAMENTO_DATA_CENTERS",
+      "category": "environmental_licensing",
+      "type": "legislative_docket",
+      "jurisdiction": "Brazil federal",
+      "title": "Projeto de Lei No. 5209/2026 - normas gerais para o licenciamento ambiental de centros de dados",
+      "issuer": "Camara dos Deputados",
+      "date": "2026",
+      "url": "https://dadosabertos.camara.leg.br/api/v2/proposicoes?siglaTipo=PL&numero=5209&ano=2026",
+      "status": "proposed",
+      "status_note": "Found via the Camara API keyword sweep on 2026-09-23 (ementa: 'Estabelece normas gerais especificas para o licenciamento ambiental de centros de dados.'). Author and committee not recorded.",
+      "phase3_use": "Would create data-center-specific licensing rules on top of Lei 15.190/2025. Track; do not model until enacted.",
+      "relations": [
+        {
+          "type": "cites",
+          "target": "LEI_15190_2025_LICENCIAMENTO_AMBIENTAL",
+          "evidence": "subject matter"
+        }
+      ]
+    },
+    {
+      "id": "PL_5247_2026_MANANCIAIS_EFICIENCIA_HIDRICA_DC",
+      "category": "redata_sustainability_regulation",
+      "type": "legislative_docket",
+      "jurisdiction": "Brazil federal",
+      "title": "Projeto de Lei No. 5247/2026 - protecao dos mananciais e eficiencia hidrica na instalacao e ampliacao de centros de dados",
+      "issuer": "Camara dos Deputados",
+      "date": "2026",
+      "url": "https://dadosabertos.camara.leg.br/api/v2/proposicoes?siglaTipo=PL&numero=5247&ano=2026",
+      "status": "proposed",
+      "status_note": "Found via the Camara API keyword sweep on 2026-09-23.",
+      "phase3_use": "Water-source protection would become a siting constraint independent of the Redata WUE threshold. Track.",
+      "relations": []
+    },
+    {
+      "id": "PL_5319_2026_SOLUCOES_HIDRICAS_DC",
+      "category": "redata_sustainability_regulation",
+      "type": "legislative_docket",
+      "jurisdiction": "Brazil federal",
+      "title": "Projeto de Lei No. 5319/2026 - obrigatoriedade de solucoes hidricas proprias e vedacao de uso de agua (centros de dados)",
+      "issuer": "Camara dos Deputados",
+      "date": "2026",
+      "url": "https://dadosabertos.camara.leg.br/api/v2/proposicoes?siglaTipo=PL&numero=5319&ano=2026",
+      "status": "proposed",
+      "status_note": "Found via the Camara API keyword sweep on 2026-09-23; ementa truncated in the listing.",
+      "phase3_use": "Would forbid use of certain water sources for data-center cooling. Track.",
+      "relations": []
     }
+  ],
+  "schema_version": "2026-09-status-aware",
+  "status_vocabulary": [
+    "proposed",
+    "in_force",
+    "enacted",
+    "lapsed",
+    "archived",
+    "partially_vetoed",
+    "veto_overridden",
+    "suspended",
+    "revoked",
+    "sub_judice",
+    "consultation_open",
+    "consultation_closed",
+    "published",
+    "unknown",
+    "unverified"
+  ],
+  "relation_vocabulary": [
+    "amends",
+    "revokes",
+    "regulates",
+    "converted_from",
+    "enacted_as",
+    "replaces",
+    "suspended_by",
+    "challenged_by",
+    "promulgated_parts_of",
+    "adopted_by",
+    "derived_from_consultation",
+    "cites"
   ]
 }

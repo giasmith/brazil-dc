@@ -1,0 +1,4 @@
+{"total_gazettes": 2, "gazettes": [
+  {"territory_id": "2304400", "date": "2026-06-10", "scraped_at": "2026-06-11T02:00:00", "url": "https://querido-diario.nyc3.cdn.digitaloceanspaces.com/2304400/2026-06-10/abc.pdf", "territory_name": "Fortaleza", "state_code": "CE", "excerpts": ["... autoriza a instalação de data center no Distrito Industrial ..."], "edition": "17.500", "is_extra_edition": false, "txt_url": "https://querido-diario.nyc3.cdn.digitaloceanspaces.com/2304400/2026-06-10/abc.txt"},
+  {"territory_id": "3509502", "date": "2026-05-02", "scraped_at": "2026-05-03T02:00:00", "url": "https://example.org/campinas.pdf", "territory_name": "Campinas", "state_code": "SP", "excerpts": ["... trecho cortado sem o termo ..."], "edition": "1.234", "is_extra_edition": true, "txt_url": "https://example.org/campinas.txt"}
+]}

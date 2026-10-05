@@ -1,0 +1,10 @@
+{
+  "dados": [
+    {"id": 2650000, "uri": "https://dadosabertos.camara.leg.br/api/v2/proposicoes/2650000", "siglaTipo": "MPV", "codTipo": 291, "numero": 1318, "ano": 2025, "ementa": "Institui o Regime Especial de Tributação para Serviços de Datacenter - Redata.", "dataApresentacao": "2025-09-17T18:00"}
+  ],
+  "links": [
+    {"rel": "self", "href": "https://dadosabertos.camara.leg.br/api/v2/proposicoes?keywords=data%20center&pagina=2&itens=100"},
+    {"rel": "first", "href": "https://dadosabertos.camara.leg.br/api/v2/proposicoes?keywords=data%20center&pagina=1&itens=100"},
+    {"rel": "last", "href": "https://dadosabertos.camara.leg.br/api/v2/proposicoes?keywords=data%20center&pagina=2&itens=100"}
+  ]
+}

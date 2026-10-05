@@ -1,0 +1,4 @@
+{"count": 2, "next": null, "previous": null, "results": [
+  {"id": 501, "tipo": {"id": 3, "sigla": "PL", "descricao": "Projeto de Lei"}, "numero": 12, "ano": 2026, "ementa": "Concede incentivo à instalação de data center no município.", "data_apresentacao": "2026-04-01", "texto_original": "/media/sapl/public/materialegislativa/2026/501/pl12.pdf", "em_tramitacao": true},
+  {"id": 502, "tipo": {"id": 3, "sigla": "PL", "descricao": "Projeto de Lei"}, "numero": 13, "ano": 2026, "ementa": "Denomina rua.", "data_apresentacao": "2026-04-02", "texto_original": "", "em_tramitacao": false}
+]}

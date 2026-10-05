@@ -64,25 +64,44 @@ def load_policy_corpus(policy_corpus: Path) -> dict:
             "flags": {},
         }
 
-    corpus = json.loads(policy_corpus.read_text())
+    corpus = json.loads(policy_corpus.read_text(encoding="utf-8"))
     documents = corpus.get("documents", [])
     counts: dict[str, int] = {}
+    status_counts: dict[str, int] = {}
+    # Lifecycle-aware view (schema 2026-09): a category "present" only via a
+    # lapsed MP or an un-enacted bill must not satisfy a Phase 3 flag.
+    live_statuses = {"in_force", "veto_overridden", "partially_vetoed", "published"}
+    live_categories: set[str] = set()
     for document in documents:
         category = str(document.get("category", "uncategorized"))
         counts[category] = counts.get(category, 0) + 1
+        status = str(document.get("status", "unknown"))
+        status_counts[status] = status_counts.get(status, 0) + 1
+        if status in live_statuses:
+            live_categories.add(category)
 
     categories = set(counts)
     corpus["source_path"] = str(policy_corpus)
     corpus["document_counts"] = counts
+    corpus["status_counts"] = status_counts
     corpus["flags"] = {
         "has_redata_core_law": "redata_core_law" in categories,
+        # True only when a Redata instrument is actually in force (Lei 15.504/2026),
+        # not merely present as a lapsed MP or a pending PL.
+        "has_redata_core_law_in_force": any(
+            str(d.get("category")) == "redata_core_law" and str(d.get("status")) == "in_force" for d in documents
+        ),
         "has_redata_sustainability_regulation": "redata_sustainability_regulation" in categories,
         "has_indigenous_land_rights": "indigenous_land_rights" in categories,
         "has_consultation_rights": "consultation_rights" in categories,
         "has_marco_temporal": "marco_temporal" in categories,
         "has_protected_area_law": "protected_areas" in categories,
         "has_environmental_licensing": bool({"protected_area_licensing", "environmental_licensing"} & categories),
+        "has_environmental_licensing_in_force": bool(
+            {"protected_area_licensing", "environmental_licensing"} & live_categories
+        ),
         "has_peer_reviewed_policy_evidence": "peer_reviewed_policy_evidence" in categories,
+        "corpus_schema_version": corpus.get("schema_version", "pre-2026-09 (no status field)"),
     }
     return corpus
 

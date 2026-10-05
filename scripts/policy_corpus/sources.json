@@ -1,0 +1,58 @@
+{
+  "_comment": "Source configuration for scripts/build_policy_corpus.py. IBGE codes are 7-digit municipality codes; verify any you add against https://www.ibge.gov.br/explica/codigos-dos-municipios.php. Entries marked verify=true were typed from memory on 2026-09-23 and must be checked before the first live run.",
+  "municipalities": {
+    "CE": ["2304400", "2303709", "2312403", "2307650"],
+    "SP": ["3550308", "3509502", "3505708", "3525904"],
+    "MG": ["3106200", "3170206"],
+    "RS": ["4314902", "4306767", "4304606"]
+  },
+  "municipality_names": {
+    "2304400": "Fortaleza (CE)",
+    "2303709": "Caucaia (CE)",
+    "2312403": "São Gonçalo do Amarante (CE) — Pecém; verify=true",
+    "2307650": "Maracanaú (CE); verify=true",
+    "3550308": "São Paulo (SP)",
+    "3509502": "Campinas (SP)",
+    "3505708": "Barueri (SP)",
+    "3525904": "Jundiaí (SP); verify=true",
+    "3106200": "Belo Horizonte (MG)",
+    "3170206": "Uberlândia (MG)",
+    "4314902": "Porto Alegre (RS)",
+    "4306767": "Eldorado do Sul (RS) — Scala AI City; verify=true",
+    "4304606": "Canoas (RS); verify=true"
+  },
+  "sapl_hosts": [],
+  "_sapl_hosts_example": [
+    {"host": "https://sapl.<municipio>.<uf>.leg.br", "jurisdiction": "BR-<UF>-<IBGE>"}
+  ],
+  "senado_norm_lookups": [
+    {"tipo": "LEI", "numero": "15504", "ano": 2026, "_why": "Redata — resolves PL 278/2026 as the enacting process"},
+    {"tipo": "LEI", "numero": "15190", "ano": 2025, "_why": "Lei Geral do Licenciamento Ambiental"},
+    {"tipo": "LEI", "numero": "14701", "ano": 2023, "_why": "Marco Temporal"},
+    {"tipo": "LEI", "numero": "15211", "ano": 2025, "_why": "ECA Digital — amended by Lei 15.504/2026 art. 3"}
+  ],
+  "lexml_urn_lookups": [
+    "urn:lex:br:federal:lei:2026-09-15;15504",
+    "urn:lex:br:federal:medida.provisoria:2025-09-17;1318",
+    "urn:lex:br:federal:lei:2025;15190",
+    "urn:lex:br:federal:decreto:2025;12772",
+    "urn:lex:br:federal:lei:2023-10-20;14701",
+    "urn:lex:br:federal:lei:2000-07-18;9985",
+    "urn:lex:br:federal:lei.complementar:2011-12-08;140"
+  ],
+  "replaces_pairs": [
+    {
+      "lapsed": {"doc_type": "medida provisoria", "number": "1318", "year": 2025, "date": "2025-09-17"},
+      "replacement": {"doc_type": "pl", "number": "278", "year": 2026},
+      "_why": "MP 1.318/2025 lost validity without conversion; PL 278/2026 re-introduced Redata and became Lei 15.504/2026"
+    }
+  ],
+  "host_throttle_seconds": {
+    "api.queridodiario.ok.org.br": 1.0,
+    "dadosabertos.camara.leg.br": 0.4,
+    "legis.senado.leg.br": 0.4,
+    "www.lexml.gov.br": 0.6,
+    "inlabs.in.gov.br": 1.0,
+    "www.confaz.fazenda.gov.br": 1.0
+  }
+}

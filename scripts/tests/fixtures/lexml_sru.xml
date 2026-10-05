@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<srw:searchRetrieveResponse xmlns:srw="http://www.loc.gov/zing/srw/">
+  <srw:version>1.1</srw:version>
+  <srw:numberOfRecords>2</srw:numberOfRecords>
+  <srw:records>
+    <srw:record>
+      <srw:recordSchema>info:srw/schema/1/dc-v1.1</srw:recordSchema>
+      <srw:recordPacking>xml</srw:recordPacking>
+      <srw:recordData>
+        <srw_dc:dc xmlns:srw_dc="info:srw/schema/1/dc-schema" xmlns:dc="http://purl.org/dc/elements/1.1/">
+          <dc:title>Lei nº 15.504, de 15 de Setembro de 2026</dc:title>
+          <dc:description>Altera a Lei nº 11.196, de 21 de novembro de 2005, para instituir o Regime Especial de Tributação para Serviços de Datacenter (Redata)</dc:description>
+          <dc:date>2026-09-15</dc:date>
+          <dc:type>Legislação</dc:type>
+          <dc:identifier>urn:lex:br:federal:lei:2026-09-15;15504</dc:identifier>
+          <dc:subject>Tributação, Datacenter</dc:subject>
+          <tipoDocumento>Lei</tipoDocumento>
+          <localidade>Brasil</localidade>
+          <autoridade>Federal</autoridade>
+        </srw_dc:dc>
+      </srw:recordData>
+      <srw:recordPosition>1</srw:recordPosition>
+    </srw:record>
+    <srw:record>
+      <srw:recordData>
+        <srw_dc:dc xmlns:srw_dc="info:srw/schema/1/dc-schema" xmlns:dc="http://purl.org/dc/elements/1.1/">
+          <dc:title>Lei nº 17.000, de 1 de Março de 2026</dc:title>
+          <dc:description>Dispõe sobre a instalação de centros de dados no Estado de São Paulo</dc:description>
+          <dc:date>2026-03-01</dc:date>
+          <dc:identifier>urn:lex:br;sao.paulo:estadual:lei:2026-03-01;17000</dc:identifier>
+          <tipoDocumento>Lei</tipoDocumento>
+          <localidade>São Paulo</localidade>
+          <autoridade>Estadual</autoridade>
+        </srw_dc:dc>
+      </srw:recordData>
+      <srw:recordPosition>2</srw:recordPosition>
+    </srw:record>
+  </srw:records>
+</srw:searchRetrieveResponse>
