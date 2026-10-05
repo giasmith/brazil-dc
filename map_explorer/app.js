@@ -860,18 +860,6 @@ function renderLeft() {
   if (S.view === "ceara") {
     var groups = {};
     LAYERS.forEach(function (l) { (groups[l.group] = groups[l.group] || []).push(l); });
-    var keyOf = {"Model output": "model", "Infrastructure": "infra"};
-    Object.keys(groups).forEach(function (gname) {
-      var inGroup = groups[gname].some(function (l) { return l.id === S.layer; });
-      var sec = section(keyOf[gname] || gname, gname, inGroup ? layerName(S.layer) : "");
-      groups[gname].forEach(function (l) {
-        sec.body.appendChild(radio("layer", l.id, l.name, l.note, S.layer === l.id, function (id) {
-          S.layer = id; paintCeara(); renderRight(); renderLeft();
-        }, HELP[l.id] ? l.id : null));
-      });
-      rail.appendChild(sec.g);
-    });
-
     // "Show only" as a drop-down
     var FILTERS = [["all", "Every cell", "All 4,633"], ["feasible", "Feasible cells", "Pass every hard constraint"],
      ["frontier", "Pareto frontier", "Best on at least one objective, worse on others"],
@@ -887,6 +875,19 @@ function renderLeft() {
     });
     gf.appendChild(sel); gf.appendChild(selNote);
     rail.appendChild(gf);
+
+    var keyOf = {"Model output": "model", "Infrastructure": "infra"};
+    Object.keys(groups).forEach(function (gname) {
+      var inGroup = groups[gname].some(function (l) { return l.id === S.layer; });
+      var sec = section(keyOf[gname] || gname, gname, inGroup ? layerName(S.layer) : "");
+      groups[gname].forEach(function (l) {
+        sec.body.appendChild(radio("layer", l.id, l.name, l.note, S.layer === l.id, function (id) {
+          S.layer = id; paintCeara(); renderRight(); renderLeft();
+        }, HELP[l.id] ? l.id : null));
+      });
+      rail.appendChild(sec.g);
+    });
+
 
     var onCount = ["protected", "indigenous", "box", "gen", "dc"].filter(function (k) { return S.overlays[k]; }).length;
     var go = section("overlays", "Overlays", onCount + " of 5 on");
