@@ -150,10 +150,14 @@ button,input,select{font:inherit;color:inherit}
 
 /* ---------- map ---------- */
 .maphead{
-  display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
   padding:12px 18px 8px;border-bottom:1px solid var(--hair2);background:var(--surface);
 }
 .maphead h2{margin:0;font-size:14px;font-weight:600}
+.maphead-l{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;min-width:0}
+.mapctl{display:flex;align-items:center;gap:8px;flex:none;margin-left:auto}
+.ctllab{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.ctlsel{width:auto;min-width:190px;padding:4px 8px;font-size:12.5px}
 .maphead p{margin:0;font-size:12px;color:var(--muted)}
 .mapwrap{position:relative;flex:1;min-height:0}
 svg.map{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:grab;touch-action:none}
@@ -287,8 +291,11 @@ img{max-width:100%}
 
     <section class="stage">
       <div class="maphead">
-        <h2 id="mapTitle">Ceará case study</h2>
-        <p id="mapSub">Drag to pan · scroll to zoom · click a cell for its record</p>
+        <div class="maphead-l">
+          <h2 id="mapTitle">Ceará case study</h2>
+          <p id="mapSub">Drag to pan · scroll to zoom · click a cell for its record</p>
+        </div>
+        <div class="mapctl" id="mapCtl"></div>
       </div>
       <div class="mapwrap" id="mapwrap">
         <svg class="map" id="svg" role="img" aria-label="Map"></svg>
@@ -315,6 +322,6 @@ img{max-width:100%}
 
 
 <script src="data.js?v=10"></script>
-<script src="app.js?v=12"></script>
+<script src="app.js?v=14"></script>
 </body>
 </html>

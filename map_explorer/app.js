@@ -860,21 +860,6 @@ function renderLeft() {
   if (S.view === "ceara") {
     var groups = {};
     LAYERS.forEach(function (l) { (groups[l.group] = groups[l.group] || []).push(l); });
-    // "Show only" as a drop-down
-    var FILTERS = [["all", "Every cell", "All 4,633"], ["feasible", "Feasible cells", "Pass every hard constraint"],
-     ["frontier", "Pareto frontier", "Best on at least one objective, worse on others"],
-     ["shortlist", "Recommended shortlist", "Top 25 by resilience score"]];
-    var gf = el("div", {class: "group"});
-    gf.appendChild(el("div", {class: "eyebrow", text: "Show only"}));
-    var sel = el("select", {class: "sel", id: "filterSel", "aria-label": "Show only"});
-    FILTERS.forEach(function (f) { var o = el("option", {value: f[0], text: f[1]}); if (S.filter === f[0]) o.selected = true; sel.appendChild(o); });
-    var selNote = el("p", {class: "hint", style: "margin:0", text: (FILTERS.filter(function (f) { return f[0] === S.filter; })[0] || FILTERS[0])[2]});
-    sel.addEventListener("change", function () {
-      S.filter = sel.value; paintCeara(); renderRight();
-      selNote.textContent = (FILTERS.filter(function (f) { return f[0] === S.filter; })[0] || FILTERS[0])[2];
-    });
-    gf.appendChild(sel); gf.appendChild(selNote);
-    rail.appendChild(gf);
 
     var keyOf = {"Model output": "model", "Infrastructure": "infra"};
     Object.keys(groups).forEach(function (gname) {
@@ -1000,11 +985,30 @@ function rampLegend(stops, lo, hi, d, unit) {
 }
 function kv(k, v) { return el("div", {class: "kv", html: "<dt>" + k + "</dt><dd class='mono'>" + v + "</dd>"}); }
 
+/* "Show only" lives in the map header, opposite the title */
+function renderMapCtl() {
+  var ctl = document.getElementById("mapCtl");
+  if (!ctl) return;
+  ctl.innerHTML = "";
+  if (S.view !== "ceara") return;
+  var FILTERS = [["all", "Every cell", "All 4,633"], ["feasible", "Feasible cells", "Pass every hard constraint"],
+   ["frontier", "Pareto frontier", "Best on at least one objective, worse on others"],
+   ["shortlist", "Recommended shortlist", "Top 25 by resilience score"]];
+  var cur = FILTERS.filter(function (f) { return f[0] === S.filter; })[0] || FILTERS[0];
+  ctl.appendChild(el("label", {class: "ctllab", "for": "filterSel", text: "Show only"}));
+  var sel = el("select", {class: "sel ctlsel", id: "filterSel", "aria-label": "Show only", title: cur[2]});
+  FILTERS.forEach(function (f) { var o = el("option", {value: f[0], text: f[1]}); if (S.filter === f[0]) o.selected = true; sel.appendChild(o); });
+  sel.addEventListener("change", function () { S.filter = sel.value; paintCeara(); renderRight(); });
+  ctl.appendChild(sel);
+}
+
 function renderRight() {
   var rail = document.getElementById("railRight");
   rail.innerHTML = "";
+  renderMapCtl();
 
   if (S.view === "ceara") {
+
     var g1 = el("div", {class: "group"});
     g1.appendChild(el("div", {class: "eyebrow", text: "Under these settings"}));
     var counts = el("div", {class: "counts"});
