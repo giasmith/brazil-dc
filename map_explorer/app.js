@@ -738,8 +738,8 @@ var HELP = {
     long: "Two satellites observe each cell every quarter. Sentinel-2 measures vegetation health (NDVI) and surface wetness (NDWI) in visible and infrared light; Sentinel-1 radar measures backscatter (VV, VH), which reads surface roughness and moisture through cloud. Sparse vegetation, standing wetness, and radar signatures typical of bare or disturbed ground raise the probability, as do proximity to a protected boundary and a vulnerable land-cover class. The model excludes cells above the cap because building on degraded or waterlogged ground carries higher environmental and engineering risk; the slider on the left lets you change that cap."
   },
   phase3: {
-    short: "How much legal caution each cell carries: Low, Medium, or Critical, from fixed rules drawn from 36 legal and policy documents.",
-    long: "Each cell is classified by fixed rules drawn from 36 documents: the ReData law, the Constitution’s Indigenous and environmental articles, the conservation-unit statute, licensing rules, and peer-reviewed evidence. Critical means a hard legal conflict (overlap with a protected area, Indigenous land, or water, or severe degradation); the cell is excluded. Medium means the cell lies within 2.5 km of a protected boundary or shows elevated land-cover or degradation risk; it stays in, is flagged for human review, and is weighted 5× in ranking. Low carries weight 1. Every rule traces to a cited document."
+    short: "How much legal caution each cell carries: Low, Medium, or Critical, from fixed geometric rules.",
+    long: "The classifier is a fixed set of rules, not a reading of documents. Critical: the cell overlaps a conservation unit or an Indigenous land, is water, lies outside Ceará, or has degradation risk at or above 0.85. Medium: the cell is within 2.5 km of a protected or Indigenous boundary, sits on a frayed boundary edge, has degradation risk above the 0.62 cap, or has land-use vulnerability of 0.70 or more. Everything else is Low. The classes carry weights of 1, 5 and 100 in the policy-burden objective, and Medium cells are flagged for human review. The rule design follows the project notes (classify into bounded categorical bins rather than free-form scores; treat boundaries near Indigenous land with precaution because of the marco temporal dispute and because official boundaries can miss community-mapped territory). A separate corpus of 36 legal and policy documents (ReData, licensing, protected-area and Indigenous-land law) is loaded as a set of presence flags; one of them enables the boundary-precaution rule, and none is read per cell. The classifier does not see licence status, consultation, or court actions, which is why a site can be Medium here and still be under litigation."
   },
   phase4: {
     short: "Which cells survive the infrastructure constraints, which sit on the Pareto frontier, and the 25 recommended sites.",
@@ -1177,12 +1177,6 @@ var REASON_TEXT = {
   infrastructure_pressure_at_fray: ["Medium", "infrastructure pressure at a boundary fray"],
   no_policy_trigger: ["Low", "no rule fired"]
 };
-var CITE_TEXT = {
-  bounded_schema_required: "classifier limited to a fixed rule schema (no free-text inference)",
-  marco_temporal_precaution: "marco temporal: boundaries under dispute are treated with precaution",
-  participatory_mapping_boundary_gap: "official boundaries may miss community-mapped territory",
-  infrastructure_fray_evidence: "peer-reviewed evidence on infrastructure pressure at boundaries"
-};
 function policyExplanation(i) {
   var wrap = el("div", {class: "why"});
   var st = C.stringVals[C.string[i]], P3 = C.p3 ? C.p3.params : null;
@@ -1208,11 +1202,7 @@ function policyExplanation(i) {
   if (notFired.length) wrap.appendChild(kv("Not " + (st === "Low" ? "Medium or Critical" : "Critical") + " because", "<span style='font-family:inherit'>" + notFired.join("; ") + "</span>"));
   wrap.appendChild(kv("Weight &lambda;", C.lam[i] + (P3 ? " <span style='font-family:inherit;color:var(--muted)'>(Low " + P3.policy_weights.Low + " · Medium " + P3.policy_weights.Medium + " · Critical " + P3.policy_weights.Critical + ")</span>" : "")));
   wrap.appendChild(kv("Human review", C.review[i] ? "required" : "not required"));
-  var cites = (C.citeVals[C.cite[i]] || "").split(";").filter(Boolean);
-  if (cites.length) wrap.appendChild(el("div", {class: "kv", html: "<dt>Evidence tags</dt><dd style='text-align:left;font-family:inherit;margin:0'>" +
-    cites.map(function (c) { return "<span class='mono'>" + c + "</span>" + (CITE_TEXT[c] ? " — " + CITE_TEXT[c] : ""); }).join("<br>") + "</dd>"}));
-  if (C.p3) wrap.appendChild(el("p", {class: "hint", style: "margin:4px 0 0", text: "Deterministic rule classifier over " + (C.p3.documents || 36) + " legal and policy documents; Low / Medium / Critical counts in this run: " +
-    C.p3.counts.Low + " / " + C.p3.counts.Medium + " / " + C.p3.counts.Critical + ". It sees boundaries and land state, not licensing status or consultation."}));
+  wrap.appendChild(el("p", {class: "hint", style: "margin:4px 0 0", text: "Rule-based: the class comes from boundaries, distances and land state only. Licensing status, consultation and court actions are not inputs — see the Policy stringency help."}));
   return wrap;
 }
 
