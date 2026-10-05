@@ -1329,7 +1329,7 @@ function cellRecord() {
   var rank = RESULT.shortlist.indexOf(i);
 
   var rh = el("div", {class: "rh"});
-  rh.appendChild(coordHead(C.lat[i], C.lon[i], "H3 " + C.h3[i]));
+  rh.appendChild(coordHead(C.lat[i], C.lon[i], null));
   rh.appendChild(el("div", {html:
     "<div style='margin-top:6px;display:flex;gap:5px;flex-wrap:wrap'>" +
       pill(status[0] + (rank >= 0 ? " #" + (rank + 1) : ""), status[1], status[1] + "1a") +
