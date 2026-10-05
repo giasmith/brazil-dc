@@ -99,3 +99,16 @@ in the facility CSV), `site.polygon` (a closed lon/lat ring), `observation`, `pr
 under the facility diamond, and the facility record gains a "Case file" section. Claims are the
 plaintiffs' allegations and are labelled as such; locations derived from imagery carry the
 `inferred_location` flag.
+
+## Record dock, trade-off types and policy explanations (2026-10-05)
+
+- The selected cell / facility / state record opens in a dock under the map (`#dock`), not in the legend rail.
+- `Frontier trade-off type` is a descriptive layer: `build_data.py` groups the default-threshold frontier cells
+  with k-means (k = 4, 12 fixed seeds, stdlib) on the objectives that vary (curtailment is constant in
+  single-state runs), names each group from where its mean profile sits (bottom third = strength, top third =
+  weakness; traits shared by three or more groups are dropped), and stores `tt`, `ttMeta`, `ttInfo`, `oExt`.
+  It changes no gate or score.
+- Every cell record shows an objective profile (bars across the frontier's range) and a "why Low / Medium /
+  Critical" block built from the Phase 3 trigger tokens, the distance to the nearest legal constraint, the
+  evidence tags and the thresholds in `phase3_policy_summary.json`. Conservation-unit names that the phase-2
+  join left as "Unnamed feature" are resolved from `data/protected_ceara.json`.

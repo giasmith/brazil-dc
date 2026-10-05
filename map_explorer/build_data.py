@@ -42,6 +42,29 @@ def enc(key):
     return vals, [idx[(p.get(key) if p.get(key) is not None else "")] for p in P]
 
 lulc_vals, lulc_idx = enc("class_name")
+nc_layer_vals, nc_layer_idx = enc("nearest_constraint_layer")
+cite_vals, cite_idx = enc("policy_citation_ids")
+
+# The phase-2 join wrote "Unnamed feature" for every conservation unit (the name lives in nome_uc).
+# Resolve it here from the explorer's own protected-area polygons: nearest polygon vertex to the cell
+# centre, which is exact enough to name the unit (the distance itself still comes from the pipeline).
+_prot = json.load(open(f"{OUT}/data/protected_ceara.json"))
+_prot_pts = [(f["nm"], [pt for ring in f["p"] for pt in ring]) for f in _prot]
+_kx = 111.32 * math.cos(math.radians(-3.6)); _ky = 110.57
+def _nearest_prot_name(lon, lat):
+    best, bd = None, float("inf")
+    for nm, pts in _prot_pts:
+        for x, y in pts:
+            d = ((x - lon) * _kx) ** 2 + ((y - lat) * _ky) ** 2
+            if d < bd: bd, best = d, nm
+    return best
+_resolved = 0
+for p_ in P:
+    if p_.get("nearest_constraint_layer") == "protected_lands" and p_.get("nearest_constraint_name") in (None, "", "Unnamed feature"):
+        nm = _nearest_prot_name(float(p_["center_lon"]), float(p_["center_lat"]))
+        if nm: p_["nearest_constraint_name"] = nm.title(); _resolved += 1
+print("nearest-constraint names resolved from protected_ceara.json:", _resolved)
+nc_name_vals, nc_name_idx = enc("nearest_constraint_name")
 sub_vals, sub_idx = enc("nearest_ons_substation")
 idc_vals, idc_idx = enc("nearest_idc_name")
 reason_vals, reason_idx = enc("policy_reason")
@@ -76,6 +99,11 @@ ceara = {
     "polX": col("policy_hard_exclusion", lambda v: 1 if v else 0),
     "fsor": col("fsor_allowed_phase3", lambda v: 1 if v else 0),
     "review": col("human_review_required", lambda v: 1 if v else 0),
+    # Phase 3 explainability: nearest legal constraint and the evidence tags behind the stringency class
+    "ncKm": col("nearest_constraint_km", r(2)),
+    "ncVals": nc_layer_vals, "ncLayer": nc_layer_idx,
+    "ncNameVals": nc_name_vals, "ncName": nc_name_idx,
+    "citeVals": cite_vals, "cite": cite_idx,
     "reasonVals": reason_vals, "reason": reason_idx,
     # phase 4 inputs
     "hvKm": col("nearest_hv_ons_bus_km", r(3)),
@@ -185,6 +213,8 @@ national = {
     "idc": {"lat": ilat, "lon": ilon, "nm": iname, "city": icity, "st": istate, "src": isrc},
 }
 
+_p3 = json.load(open(f"{UP}/clean_data/sovereign_compute_nexus/phase3_policy/phase3_policy_summary.json"))
+ceara["p3"] = {"params": _p3["parameters"], "counts": _p3["legal_stringency_counts"], "documents": _p3["corpus_flags"].get("external_corpus_document_count")}
 ceara["protected"] = json.load(open(f"{OUT}/data/protected_ceara.json"))
 ceara["indigenous"] = json.load(open(f"{OUT}/data/indigenous_ceara.json"))
 ceara["outline"] = json.load(open(f"{OUT}/data/ceara_outline.json"))
@@ -365,11 +395,6 @@ import datetime as _dt
 payload = {"ceara": ceara, "national": national,
            "meta": {"generated": _dt.date.today().isoformat(), "source": "~/Projects/Brazil"}}
 
-with open(f"{OUT}/data.js", "w") as fh:
-    fh.write("window.SCN=")
-    json.dump(payload, fh, separators=(",", ":"))
-    fh.write(";")
-print("data.js:", f"{os.path.getsize(f'{OUT}/data.js'):,} bytes")
 
 # ------------------------------------------------- sanity: reproduce defaults
 EPS, HV, LINE, IDCK = 0.62, 25.0, 15.0, 50.0
@@ -417,3 +442,91 @@ f, fr, sh = run(False)
 print("corrected feasible matches stored:", set(f) == stored_feas)
 print("corrected shortlist matches stored:", set(sh) == stored_short)
 assert set(f) == stored_feas and set(sh) == stored_short, "explorer's live solver disagrees with the Phase 4 outputs on disk"
+
+# ---------------------------------------- frontier trade-off types (descriptive)
+# Frontier cells at the default thresholds are grouped by what they are good and bad at:
+# k-means (k=4, 12 restarts, fixed seeds, stdlib only) on the objectives that actually vary,
+# each scaled 0-1 over the frontier's own range. Curtailment is constant in single-state runs
+# and is dropped. Groups are sorted by mean resilience score so colours are stable across
+# rebuilds. This is a reading aid, not a model output: it does not change any gate or score.
+import random as _rnd
+OBJ_WORDS = {
+    "oGrid": ("Grid tie", "cheap grid tie", "costly grid tie"),
+    "oLat":  ("Fiber / latency", "near fiber", "far from fiber"),
+    "oEner": ("Energy supply", "energy secure", "energy short"),
+    "oCurt": ("Curtailment", "curtailment upside", "no curtailment upside"),
+    "oRisk": ("Land & water risk", "low land/water risk", "high land/water risk"),
+    "oPol":  ("Policy burden", "light policy burden", "heavy policy burden"),
+}
+_feas, _front, _ = run(False)
+o_ext = {o: (min(ceara[o][i] for i in _front), max(ceara[o][i] for i in _front)) for o in objs}
+varying = [o for o in objs if o_ext[o][1] - o_ext[o][0] > 1e-9]
+def _norm(o, v):
+    lo, hi = o_ext[o]
+    return 0.0 if hi <= lo else max(0.0, min(1.0, (v - lo) / (hi - lo)))
+X = [[_norm(o, ceara[o][i]) for o in varying] for i in _front]
+
+def _kmeans(X, k, seed, iters=80):
+    rng = _rnd.Random(seed)
+    cent = [list(x) for x in rng.sample(X, k)]
+    lab = [0] * len(X)
+    for _ in range(iters):
+        changed = False
+        for n_, x in enumerate(X):
+            j = min(range(k), key=lambda c: sum((a - b) ** 2 for a, b in zip(x, cent[c])))
+            if j != lab[n_]:
+                lab[n_] = j; changed = True
+        for c in range(k):
+            pts = [X[n_] for n_ in range(len(X)) if lab[n_] == c]
+            if pts:
+                cent[c] = [sum(col) / len(pts) for col in zip(*pts)]
+        if not changed:
+            break
+    inertia = sum(sum((a - b) ** 2 for a, b in zip(x, cent[lab[n_]])) for n_, x in enumerate(X))
+    return lab, cent, inertia
+
+TT_K = 4
+lab, cent, inertia = min((_kmeans(X, TT_K, seed) for seed in range(12)), key=lambda t: t[2])
+avg = [sum(col) / len(X) for col in zip(*X)]
+order = sorted(range(TT_K), key=lambda c: -sum(ceara["score"][_front[n_]] for n_ in range(len(X)) if lab[n_] == c) / max(1, lab.count(c)))
+rank = {c: r_ for r_, c in enumerate(order)}
+tt = [-1] * ceara["n"]
+for n_, i in enumerate(_front):
+    tt[i] = rank[lab[n_]]
+tt_meta = []
+# absolute reading of each group's mean profile: bottom third = strength, top third = weakness;
+# a phrase shared by three or more groups describes the frontier, not the group, and is dropped
+raw = {}
+for c in order:
+    raw[c] = ([q for q in range(len(varying)) if cent[c][q] <= 0.33], [q for q in range(len(varying)) if cent[c][q] >= 0.67])
+common_s = {q for q in range(len(varying)) if sum(1 for c in order if q in raw[c][0]) >= 3}
+common_w = {q for q in range(len(varying)) if sum(1 for c in order if q in raw[c][1]) >= 3}
+for c in order:
+    members = [_front[n_] for n_ in range(len(X)) if lab[n_] == c]
+    strengths = sorted([q for q in raw[c][0] if q not in common_s], key=lambda q: cent[c][q])
+    weaknesses = sorted([q for q in raw[c][1] if q not in common_w], key=lambda q: -cent[c][q])
+    parts = [OBJ_WORDS[varying[q]][1] for q in strengths] + [OBJ_WORDS[varying[q]][2] for q in weaknesses]
+    name = ", ".join(parts[:3]) if parts else "middle of the pack"
+    name = name[0].upper() + name[1:]
+    tt_meta.append({
+        "name": name, "n": len(members),
+        "meanScore": round(sum(ceara["score"][i] for i in members) / len(members), 1),
+        "profile": {varying[q]: round(cent[c][q], 2) for q in range(len(varying))},
+        "shortlisted": sum(1 for i in members if label_vals[ceara["label"][i]] == "recommended_shortlist"),
+        "sharedTraits": [OBJ_WORDS[varying[q]][1] for q in sorted(common_s)] + [OBJ_WORDS[varying[q]][2] for q in sorted(common_w)],
+    })
+ceara["tt"] = tt
+ceara["ttMeta"] = tt_meta
+ceara["ttInfo"] = {"k": TT_K, "restarts": 12, "n_frontier": len(_front), "objectives": varying,
+                   "dropped": [o for o in objs if o not in varying], "frontierAvg": {varying[q]: round(avg[q], 2) for q in range(len(varying))},
+                   "objLabels": {o: OBJ_WORDS[o][0] for o in objs}}
+ceara["oExt"] = {o: [round(o_ext[o][0], 6), round(o_ext[o][1], 6)] for o in objs}
+print(f"trade-off types: k={TT_K} on {varying} over {len(_front)} frontier cells, inertia {inertia:.1f}")
+for m in tt_meta:
+    print(f"  {m['n']:4d} cells  score {m['meanScore']:5.1f}  shortlisted {m['shortlisted']:2d}  {m['name']}  {m['profile']}")
+
+with open(f"{OUT}/data.js", "w") as fh:
+    fh.write("window.SCN=")
+    json.dump(payload, fh, separators=(",", ":"))
+    fh.write(";")
+print("data.js:", f"{os.path.getsize(f'{OUT}/data.js'):,} bytes")

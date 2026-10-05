@@ -13,6 +13,9 @@ var RAMPS = {
 };
 var SEQ = RAMPS.blue, SEQ_W = RAMPS.amber;
 var CAT  = {blue:"#2a78d6", orange:"#eb6834", aqua:"#1baf7a"};
+/* frontier trade-off types (descriptive k-means groups from build_data.py), in stored order: best mean score first */
+var TT_COLORS = ["#7b5fd9", "#1f9e89", "#c8456f", "#d98c1f"];
+var OBJ_ORDER = ["oGrid", "oLat", "oEner", "oCurt", "oRisk", "oPol"];
 var STAT = {good:"#0ca30c", warn:"#fab219", crit:"#d03b3b"};
 var SELECTED = "#e03131";
 
@@ -162,6 +165,7 @@ var LAYERS = [
   {id: "phase3", group: "Model output", name: "Policy stringency", note: "Low · Medium · Critical"},
   {id: "phase4", group: "Model output", name: "Site shortlist", note: "Excluded · feasible · frontier · shortlist"},
   {id: "score",  group: "Model output", name: "Resilience score", note: "Composite of surviving cells, 0–100"},
+  {id: "ttype",  group: "Model output", name: "Frontier trade-off type", note: "What each frontier cell is good and bad at"},
 
   {id: "hv",     group: "Infrastructure", name: "Distance to HV substation", note: "km to nearest ONS high-voltage bus"},
   {id: "lineKm", group: "Infrastructure", name: "Distance to transmission line", note: "km to nearest ONS line"},
@@ -209,6 +213,9 @@ function cellFill(i) {
       return s === "Low" ? STAT.good : s === "Medium" ? STAT.warn : STAT.crit;
     }
     case "lulc":   return LULC_GROUP[C.lulcVals[C.lulc[i]]] || css("--neutral");
+    case "ttype":
+      if (!RESULT.isFront[i]) return css("--neutral");
+      return C.tt[i] >= 0 ? TT_COLORS[C.tt[i] % TT_COLORS.length] : css("--muted");
   }
   var cfg = SEQ_LAYER[S.layer];
   if (cfg) {
@@ -738,6 +745,10 @@ var HELP = {
     short: "Which cells survive the infrastructure constraints, which sit on the Pareto frontier, and the 25 recommended sites.",
     long: "After the legal and degradation filters, a cell must also be within 25 km of a high-voltage substation, 15 km of a transmission line, and 50 km of an internet interconnection facility; a data center that cannot plug in is not a site. The survivors are compared on six objectives: grid cost, latency, energy shortfall, curtailment opportunity, land and water risk, and policy burden. A cell is on the frontier when no other cell beats it on every objective at once. The 25 recommended sites are the frontier cells with the highest resilience score; twelve need human review."
   },
+  ttype: {
+    short: "Frontier cells grouped by what they are good and bad at, so the orange tier can be read as kinds of trade-off rather than one blob.",
+    long: "Being on the Pareto frontier only means no other feasible cell beats a cell on every objective at once; with five objectives that varies, most survivors qualify, so the frontier is large and says little by itself. To make it readable, the frontier cells at the default thresholds are grouped with k-means (k = 4, fixed seeds) on the objectives that actually vary, each scaled 0–1 across the frontier's own range; curtailment is constant in this run and is dropped. Each group is named from where its average profile sits: bottom third of the range is a strength, top third a weakness, and a trait shared by three or more groups is treated as a frontier-wide fact rather than a group label. The grouping is a reading aid computed at the default settings, not a model output: it changes no gate and no score, and cells that enter the frontier only after you move a slider are shown untyped."
+  },
   score: {
     short: "A single 0–100 summary of how well a surviving cell balances grid access, energy, land, and policy. Higher is better.",
     long: "The score folds the six objectives into one number so cells can be sorted: grid access counts 24%, land and water safety 20%, energy opportunity 18%, latency 17%, policy burden 11%, and curtailment opportunity 10%. Each objective is scaled 0–1 with lower cost as better, so a cell with no trade-offs would score 100. It is meaningful only for cells that passed every hard constraint. Treat it as a way to compare candidates, not a verdict: the top-ranked cell scores 74.3, and fifteen of the 25 recommended cells sit directly on a transmission line."
@@ -999,6 +1010,25 @@ function renderRight() {
         g2.appendChild(sw(STAT.warn, "Medium · weight 5 (365)"));
         g2.appendChild(sw(STAT.crit, "Critical · weight 100 (1,734)"));
         break;
+      case "ttype": {
+        var untyped = 0;
+        for (var u = 0; u < C.n; u++) if (RESULT.isFront[u] && C.tt[u] < 0) untyped++;
+        C.ttMeta.forEach(function (m, k) {
+          g2.appendChild(sw(TT_COLORS[k % TT_COLORS.length], m.name + " (" + fmt(m.n) + ")"));
+          g2.appendChild(el("p", {class: "hint", style: "margin:-2px 0 6px 22px", text:
+            "mean score " + m.meanScore + (m.shortlisted ? " · " + m.shortlisted + " of the 25 shortlisted" : "")}));
+        });
+        if (untyped) g2.appendChild(sw(css("--muted"), "On the frontier at these settings, untyped (" + fmt(untyped) + ")"));
+        g2.appendChild(sw(css("--neutral"), "Not on the frontier"));
+        var shared = (C.ttMeta[0] && C.ttMeta[0].sharedTraits) || [];
+        g2.appendChild(el("p", {class: "hint", text:
+          "Descriptive grouping of the " + fmt(C.ttInfo.n_frontier) + " frontier cells at the default thresholds (k-means, k = " + C.ttInfo.k + ") on " +
+          C.ttInfo.objectives.map(function (o) { return C.ttInfo.objLabels[o].toLowerCase(); }).join(", ") +
+          "; curtailment is constant in this run and is left out." +
+          (shared.length ? " Nearly the whole frontier is " + shared.join(" and ") + ", so that is not used to tell groups apart." : "") +
+          " A reading aid, not a model output."}));
+        break;
+      }
       case "lulc": {
         var seen = {}, order = [];
         for (var i = 0; i < C.n; i++) { var nm = C.lulcVals[C.lulc[i]]; seen[nm] = (seen[nm] || 0) + 1; }
@@ -1031,11 +1061,6 @@ function renderRight() {
     }
     rail.appendChild(g2);
 
-    var g3 = el("div", {class: "group"});
-    g3.appendChild(el("div", {class: "eyebrow", text: S.dcSel != null ? "Selected facility" : "Selected cell"}));
-    g3.appendChild(S.dcSel != null ? dcRecord(S.dcSel) : cellRecord());
-    rail.appendChild(g3);
-
   } else {
     var s = S.natSel ? byAb(S.natSel) : null;
     var m = natMetric();
@@ -1065,17 +1090,128 @@ function renderRight() {
     if (S.natOverlays.protected) n1.appendChild(sw(CAT.aqua, "Protected area"));
     if (S.natOverlays.indigenous) n1.appendChild(sw(CAT.orange, "Indigenous land"));
     rail.appendChild(n1);
-
-    var n2 = el("div", {class: "group"});
-    n2.appendChild(el("div", {class: "eyebrow", text: S.dcSel != null ? "Selected facility" : "Selected state"}));
-    n2.appendChild(S.dcSel != null ? dcRecord(S.dcSel) : stateRecord(s));
-    rail.appendChild(n2);
   }
+  renderDock();
+}
+
+/* the selected record lives in its own pane under the map, not in the legend rail */
+function renderDock() {
+  var dock = document.getElementById("dock");
+  if (!dock) return;
+  var ceara = S.view === "ceara";
+  var has = S.dcSel != null || (ceara ? S.sel != null : !!S.natSel);
+  var title = S.dcSel != null ? "Selected facility" : ceara ? "Selected cell" : "Selected state";
+  dock.innerHTML = "";
+  dock.classList.toggle("open", has);
+  var head = el("div", {class: "dockhead"});
+  head.appendChild(el("div", {class: "eyebrow", text: has ? title : "Record"}));
+  if (has) {
+    var x = el("button", {class: "dockclose", type: "button", title: "Clear selection", "aria-label": "Clear selection", text: "×"});
+    x.addEventListener("click", function () {
+      S.dcSel = null; S.sel = null; S.natSel = null;
+      if (ceara) paintCeara(); else paintNational();
+      renderRight();
+    });
+    head.appendChild(x);
+  }
+  dock.appendChild(head);
+  var body = el("div", {class: "dockbody"});
+  if (!has) {
+    body.appendChild(el("div", {class: "empty", text: ceara ? "Click a cell or a facility diamond on the map to open its full record here." : "Click a state or a facility diamond to open its record here."}));
+  } else if (S.dcSel != null) {
+    body.appendChild(dcRecord(S.dcSel));
+  } else if (ceara) {
+    body.appendChild(cellRecord());
+  } else {
+    body.appendChild(stateRecord(byAb(S.natSel)));
+  }
+  dock.appendChild(body);
 }
 
 function pill(text, color, bg) {
   return "<span class='pill' style='color:" + color + ";background:" + bg + ";border-color:" + color + "33'>" + text + "</span>";
 }
+/* plain-language reading of the Phase 3 classifier for one cell: which rule fired, on what evidence */
+var REASON_TEXT = {
+  protected_overlap: ["Critical", "overlaps a conservation unit"],
+  indigenous_land_overlap: ["Critical", "overlaps an Indigenous land"],
+  outside_state_boundary: ["Critical", "lies outside Ceará"],
+  surface_water_or_water_lulc: ["Critical", "is surface water"],
+  critical_rs_degradation_risk: ["Critical", "degradation risk at or above the critical cutoff"],
+  p_deg_rs_above_epsilon: ["Medium", "degradation risk above ε (also a hard exclusion)"],
+  protected_or_indigenous_fray_cell: ["Medium", "sits on the frayed edge of a protected or Indigenous boundary"],
+  within_boundary_review_buffer: ["Medium", "within the boundary-review buffer of a legal constraint"],
+  infrastructure_pressure_at_fray: ["Medium", "infrastructure pressure at a boundary fray"],
+  no_policy_trigger: ["Low", "no rule fired"]
+};
+var CITE_TEXT = {
+  bounded_schema_required: "classifier limited to a fixed rule schema (no free-text inference)",
+  marco_temporal_precaution: "marco temporal: boundaries under dispute are treated with precaution",
+  participatory_mapping_boundary_gap: "official boundaries may miss community-mapped territory",
+  infrastructure_fray_evidence: "peer-reviewed evidence on infrastructure pressure at boundaries"
+};
+function policyExplanation(i) {
+  var wrap = el("div", {class: "why"});
+  var st = C.stringVals[C.string[i]], P3 = C.p3 ? C.p3.params : null;
+  var tokens = (C.reasonVals[C.reason[i]] || "no_policy_trigger").split(";");
+  var rows = [];
+  tokens.forEach(function (t) {
+    var r = REASON_TEXT[t] || [st, t.split("_").join(" ")];
+    var line = "<b>" + r[0] + ":</b> " + r[1];
+    if (t === "within_boundary_review_buffer" && P3 && C.ncKm[i] != null) {
+      line += " — " + C.ncKm[i].toFixed(2) + " km from " + (C.ncNameVals[C.ncName[i]] || "an unnamed feature") +
+              " (" + (C.ncVals[C.ncLayer[i]] || "").split("_").join(" ") + "); the buffer is " + P3.boundary_review_km + " km";
+    }
+    if (t === "critical_rs_degradation_risk" && P3) line += " (P<sub>deg</sub> " + num3(C.pdeg[i]) + " ≥ " + P3.critical_pdeg + ")";
+    if (t === "p_deg_rs_above_epsilon" && P3) line += " (P<sub>deg</sub> " + num3(C.pdeg[i]) + " > " + P3.epsilon + ")";
+    rows.push(line);
+  });
+  if (st === "Low" && tokens[0] === "no_policy_trigger" && P3 && C.ncKm[i] != null)
+    rows.push("Nearest legal constraint " + C.ncKm[i].toFixed(2) + " km away (" + (C.ncNameVals[C.ncName[i]] || "unnamed") + "), beyond the " + P3.boundary_review_km + " km buffer");
+  wrap.appendChild(el("div", {class: "kv", html: "<dd style='text-align:left;font-family:inherit;margin:0'>" + rows.join("<br>") + "</dd>"}));
+  var notFired = [];
+  if (st !== "Critical") notFired.push("no overlap with a conservation unit, Indigenous land or water");
+  if (st !== "Critical" && P3) notFired.push("P<sub>deg</sub> " + num3(C.pdeg[i]) + " below the critical " + P3.critical_pdeg);
+  if (notFired.length) wrap.appendChild(kv("Not " + (st === "Low" ? "Medium or Critical" : "Critical") + " because", "<span style='font-family:inherit'>" + notFired.join("; ") + "</span>"));
+  wrap.appendChild(kv("Weight &lambda;", C.lam[i] + (P3 ? " <span style='font-family:inherit;color:var(--muted)'>(Low " + P3.policy_weights.Low + " · Medium " + P3.policy_weights.Medium + " · Critical " + P3.policy_weights.Critical + ")</span>" : "")));
+  wrap.appendChild(kv("Human review", C.review[i] ? "required" : "not required"));
+  var cites = (C.citeVals[C.cite[i]] || "").split(";").filter(Boolean);
+  if (cites.length) wrap.appendChild(el("div", {class: "kv", html: "<dt>Evidence tags</dt><dd style='text-align:left;font-family:inherit;margin:0'>" +
+    cites.map(function (c) { return "<span class='mono'>" + c + "</span>" + (CITE_TEXT[c] ? " — " + CITE_TEXT[c] : ""); }).join("<br>") + "</dd>"}));
+  if (C.p3) wrap.appendChild(el("p", {class: "hint", style: "margin:4px 0 0", text: "Deterministic rule classifier over " + (C.p3.documents || 36) + " legal and policy documents; Low / Medium / Critical counts in this run: " +
+    C.p3.counts.Low + " / " + C.p3.counts.Medium + " / " + C.p3.counts.Critical + ". It sees boundaries and land state, not licensing status or consultation."}));
+  return wrap;
+}
+
+function num3(v) { return v == null ? "—" : v.toFixed(3); }
+/* one bar per objective: where the cell sits between the frontier's best (left) and worst (right) value */
+function objectiveProfile(i) {
+  var wrap = el("div", {class: "profile"});
+  var varying = C.ttInfo.objectives, best = null, worst = null, bv = 2, wv = -1, vals = {};
+  varying.forEach(function (o) {
+    var e = C.oExt[o], v = C[o][i];
+    var z = e[1] > e[0] ? Math.max(0, Math.min(1, (v - e[0]) / (e[1] - e[0]))) : 0;
+    vals[o] = z;
+    if (z < bv) { bv = z; best = o; }
+    if (z > wv) { wv = z; worst = o; }
+  });
+  OBJ_ORDER.forEach(function (o) {
+    var e = C.oExt[o], v = C[o][i], constant = !(e[1] > e[0]);
+    var z = constant ? 0 : vals[o];
+    var tag = constant ? "constant in this run" : o === best ? "strongest" : o === worst ? "weakest" : "";
+    var row = el("div", {class: "prow" + (constant ? " const" : "")});
+    row.appendChild(el("div", {class: "plab", text: C.ttInfo.objLabels[o]}));
+    var bar = el("div", {class: "pbar"});
+    bar.appendChild(el("div", {class: "pfill", style: "width:" + (z * 100).toFixed(1) + "%"}));
+    row.appendChild(bar);
+    row.appendChild(el("div", {class: "pval mono", text: v == null ? "—" : v.toFixed(2)}));
+    row.appendChild(el("div", {class: "ptag", text: tag}));
+    wrap.appendChild(row);
+  });
+  wrap.appendChild(el("p", {class: "hint", style: "margin:4px 0 0", text: "Lower is better. Bars run from the frontier's best value (left) to its worst (right); a cell past either end is clamped."}));
+  return wrap;
+}
+
 function cellRecord() {
   var box = el("div", {class: "record"});
   if (S.sel == null) {
@@ -1096,6 +1232,7 @@ function cellRecord() {
       pill(status[0] + (rank >= 0 ? " #" + (rank + 1) : ""), status[1], status[1] + "1a") +
       pill(st + " stringency", stc, stc + "1a") +
       (C.review[i] ? pill("needs human review", css("--warn-line"), css("--warn-bg")) : "") +
+      (RESULT.isFront[i] && C.tt[i] >= 0 ? pill(C.ttMeta[C.tt[i]].name, TT_COLORS[C.tt[i] % TT_COLORS.length], TT_COLORS[C.tt[i] % TT_COLORS.length] + "1a") : "") +
     "</div>"}));
 
   var dl = el("dl", {});
@@ -1103,17 +1240,17 @@ function cellRecord() {
     dl.appendChild(el("div", {class: "sec eyebrow", text: "Why it is excluded"}));
     RESULT.reason[i].forEach(function (r) { dl.appendChild(el("div", {class: "kv", html: "<dt>·</dt><dd style='text-align:left;font-family:inherit'>" + r + "</dd>"})); });
   }
-  dl.appendChild(el("div", {class: "sec eyebrow", text: "Phase 2 — satellite"}));
-  dl.appendChild(kv("Degradation P<sub>deg</sub>", C.pdeg[i].toFixed(3)));
-  dl.appendChild(kv("NDVI (vegetation)", C.ndvi[i].toFixed(3)));
-  dl.appendChild(kv("NDWI (wetness)", C.ndwi[i].toFixed(3)));
-  dl.appendChild(kv("Radar VV / VH", C.vv[i].toFixed(1) + " / " + C.vh[i].toFixed(1) + " dB"));
+  dl.appendChild(el("div", {class: "sec eyebrow", text: "Objective profile"}));
+  dl.appendChild(objectiveProfile(i));
+  dl.appendChild(el("div", {class: "sec eyebrow", text: "Phase 2 — land"}));
+  dl.appendChild(kv("Degradation P<sub>deg</sub>", num3(C.pdeg[i])));
+  if (C.ndvi[i] != null) dl.appendChild(kv("NDVI (vegetation)", num3(C.ndvi[i])));
+  if (C.ndwi[i] != null) dl.appendChild(kv("NDWI (wetness)", num3(C.ndwi[i])));
+  if (C.vv[i] != null && C.vh[i] != null) dl.appendChild(kv("Radar VV / VH", C.vv[i].toFixed(1) + " / " + C.vh[i].toFixed(1) + " dB"));
   dl.appendChild(kv("Land cover", "<span style='font-family:inherit'>" + C.lulcVals[C.lulc[i]] + "</span>"));
 
-  dl.appendChild(el("div", {class: "sec eyebrow", text: "Phase 3 — policy"}));
-  dl.appendChild(kv("Weight &lambda;", C.lam[i]));
-  dl.appendChild(kv("Triggers", "<span style='font-family:inherit;text-align:right;display:block'>" +
-    (C.reasonVals[C.reason[i]] || "none").split(";").join("<br>") + "</span>"));
+  dl.appendChild(el("div", {class: "sec eyebrow", text: "Phase 3 — policy: why " + st}));
+  dl.appendChild(policyExplanation(i));
 
   dl.appendChild(el("div", {class: "sec eyebrow", text: "Infrastructure"}));
   dl.appendChild(kv("Nearest HV substation", C.hvKm[i].toFixed(2) + " km"));

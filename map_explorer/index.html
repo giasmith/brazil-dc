@@ -197,6 +197,30 @@ text.muni{font-family:"IBM Plex Sans Condensed","IBM Plex Sans",sans-serif;font-
 .pill{display:inline-block;padding:1px 7px;border-radius:20px;font-size:11px;font-weight:500;border:1px solid transparent}
 .empty{color:var(--muted);font-size:12px;padding:14px 12px;text-align:center}
 
+/* record dock: the selected cell / facility / state record, under the map */
+.dock{flex:none;background:var(--panel);border-top:1px solid var(--hair);max-height:46%;display:flex;flex-direction:column;min-height:0}
+.dock:not(.open){max-height:none}
+.dockhead{display:flex;align-items:center;justify-content:space-between;padding:8px 16px 6px}
+.dockclose{border:1px solid var(--hair);background:var(--surface);color:var(--muted);border-radius:6px;width:24px;height:24px;line-height:1;font-size:15px;cursor:pointer}
+.dockclose:hover{color:var(--ink)}
+.dockbody{overflow-y:auto;padding:0 16px 14px;min-height:0}
+.dock:not(.open) .dockbody{padding-bottom:8px}
+.dock .record{display:grid;grid-template-columns:minmax(190px,230px) minmax(0,1fr)}
+.dock .record .rh{border-bottom:0;border-right:1px solid var(--hair2)}
+.dock .record dl{column-count:2;column-gap:28px;padding:6px 14px 10px}
+.dock .record .kv,.dock .record .sec,.dock .record .profile{break-inside:avoid}
+.dock .record .sec:first-child{padding-top:4px}
+.profile{padding:4px 0 6px}
+.prow{display:grid;grid-template-columns:96px minmax(70px,1fr) 38px 60px;gap:8px;align-items:center;font-size:11.5px;padding:3px 0}
+.prow.const{opacity:.55}
+.plab{color:var(--muted)}
+.pbar{height:7px;border-radius:4px;background:var(--hair2);overflow:hidden}
+.pfill{height:100%;background:var(--accent);border-radius:4px}
+.pval{text-align:right;font-size:11px}
+.ptag{font-size:10.5px;color:var(--muted)}
+.dock .record .mono{word-break:break-all}
+.dock .record dl{column-gap:34px}
+@media (max-width:1100px){.dock .record{grid-template-columns:1fr}.dock .record .rh{border-right:0;border-bottom:1px solid var(--hair2)}.dock .record dl{column-count:1}}
 .foot{padding:12px 20px;border-top:1px solid var(--hair);background:var(--surface);font-size:11.5px;color:var(--muted)}
 .foot a{color:var(--accent-ink)}
 
@@ -204,7 +228,9 @@ text.muni{font-family:"IBM Plex Sans Condensed","IBM Plex Sans",sans-serif;font-
   .shell{height:auto;min-height:100dvh}
   .work{grid-template-columns:1fr;gap:0;overflow:visible}
   .rail{border-bottom:1px solid var(--hair);overflow:visible}
-  .stage{height:68vh;min-height:420px;border-bottom:1px solid var(--hair)}
+  .stage{min-height:420px;border-bottom:1px solid var(--hair)}
+  .mapwrap{height:60vh;min-height:360px}
+  .dock{max-height:none}
   .mapwrap{min-height:340px}
 }
 @media (max-width:520px){
@@ -255,6 +281,7 @@ img{max-width:100%}
           <button id="zres" title="Reset view" aria-label="Reset view">⤢</button>
         </div>
       </div>
+      <div class="dock" id="dock" aria-live="polite"></div>
     </section>
 
     <aside class="rail right" id="railRight"></aside>
@@ -268,7 +295,7 @@ img{max-width:100%}
 
 
 
-<script src="data.js?v=8"></script>
-<script src="app.js?v=10"></script>
+<script src="data.js?v=9"></script>
+<script src="app.js?v=11"></script>
 </body>
 </html>
