@@ -1202,7 +1202,6 @@ function policyExplanation(i) {
   if (notFired.length) wrap.appendChild(kv("Not " + (st === "Low" ? "Medium or Critical" : "Critical") + " because", "<span style='font-family:inherit'>" + notFired.join("; ") + "</span>"));
   wrap.appendChild(kv("Weight &lambda;", C.lam[i] + (P3 ? " <span style='font-family:inherit;color:var(--muted)'>(Low " + P3.policy_weights.Low + " · Medium " + P3.policy_weights.Medium + " · Critical " + P3.policy_weights.Critical + ")</span>" : "")));
   wrap.appendChild(kv("Human review", C.review[i] ? "required" : "not required"));
-  wrap.appendChild(el("p", {class: "hint", style: "margin:4px 0 0", text: "Rule-based: the class comes from boundaries, distances and land state only. Licensing status, consultation and court actions are not inputs — see the Policy stringency help."}));
   return wrap;
 }
 
