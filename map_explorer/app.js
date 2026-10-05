@@ -163,12 +163,6 @@ var LAYERS = [
   {id: "phase4", group: "Model output", name: "Site shortlist", note: "Excluded · feasible · frontier · shortlist"},
   {id: "score",  group: "Model output", name: "Resilience score", note: "Composite of surviving cells, 0–100"},
 
-  {id: "ndvi",   group: "Satellite", name: "Vegetation health (NDVI)", note: "Sentinel-2 optical"},
-  {id: "ndwi",   group: "Satellite", name: "Wetness (NDWI)", note: "Sentinel-2 optical"},
-  {id: "vv",     group: "Satellite", name: "Radar backscatter VV", note: "Sentinel-1, dB"},
-  {id: "vh",     group: "Satellite", name: "Radar backscatter VH", note: "Sentinel-1, dB"},
-  {id: "lulc",   group: "Satellite", name: "Land cover", note: "MapBiomas class groups"},
-
   {id: "hv",     group: "Infrastructure", name: "Distance to HV substation", note: "km to nearest ONS high-voltage bus"},
   {id: "lineKm", group: "Infrastructure", name: "Distance to transmission line", note: "km to nearest ONS line"},
   {id: "idcKm",  group: "Infrastructure", name: "Distance to fiber anchor", note: "km to nearest data-center facility"},
@@ -865,9 +859,6 @@ function renderLeft() {
     statusChecks("ovGenSt", S.genStatus, function () { paintCeara(); renderRight(); }).forEach(function (n) { go.appendChild(n); });
     go.appendChild(check("ovDc", "Data centers — curated list", "Fortaleza facilities, now inside the box", S.overlays.dc, function (v) { S.overlays.dc = v; paintCeara(); renderRight(); }));
     statusChecks("ovDcSt", S.dcStatus, function () { paintCeara(); renderRight(); }).forEach(function (n) { go.appendChild(n); });
-    go.appendChild(el("p", {class: "hint", style: "margin-top:2px", html:
-      "Box widened to 75 × 55 km on September 17, 2026 so the Fortaleza facilities fall inside it. " +
-      "Degradation risk in this run comes from the local proxy, not Sentinel — those exports are pending."}));
     rail.appendChild(go);
 
     var gt = el("div", {class: "group"});
